@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reconnaissance | Renvector</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<nav>
+  <a href="../index.html" class="nav-logo"><span class="br">&lt;</span>Renvector<span class="br">/&gt;</span></a>
+  <a href="../index.html#cheatsheets" class="nav-back">← Back to Cheatsheets</a>
+</nav>
+
+<div class="cs-layout">
+  <aside class="cs-sidebar">
+    <div class="cs-sidebar-label">On This Page</div>
+    <a href="#passive">Passive Recon</a>
+    <a href="#dns">DNS Enumeration</a>
+    <a href="#portscan">Port Scanning</a>
+    <a href="#dirbust">Directory Busting</a>
+    <a href="#subdomains">Subdomain Enum</a>
+    <a href="#osint">OSINT</a>
+  </aside>
+
+  <main class="cs-main">
+    <div class="cs-header">
+      <div class="cs-header-top">
+        <span class="cs-icon">🔍</span>
+        <h1 class="cs-title">Reconnaissance</h1>
+      </div>
+      <p class="cs-subtitle">Passive and active recon techniques for web targets, networks, and domains.</p>
+    </div>
+
+    <!-- PASSIVE -->
+    <div class="cs-section" id="passive">
+      <h2 class="cs-section-title"><span class="sec-icon">👁️</span> Passive Recon</h2>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">WHOIS & Cert Transparency</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># WHOIS lookup</span>
+<span class="cmd">whois</span> target.com
+
+<span class="cm"># Certificate transparency — find subdomains</span>
+<span class="cm"># Visit: https://crt.sh/?q=%.target.com</span>
+
+<span class="cm"># Wayback Machine — check old pages</span>
+<span class="cm"># Visit: https://web.archive.org/web/*/target.com</span>
+
+<span class="cm"># Google dorks</span>
+site:target.com
+site:target.com filetype:pdf
+site:target.com inurl:admin
+site:target.com intitle:"index of"</pre>
+      </div>
+    </div>
+
+    <!-- DNS -->
+    <div class="cs-section" id="dns">
+      <h2 class="cs-section-title"><span class="sec-icon">🌐</span> DNS Enumeration</h2>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">DNS Lookups</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># Basic DNS records</span>
+<span class="cmd">dig</span> target.com A
+<span class="cmd">dig</span> target.com MX
+<span class="cmd">dig</span> target.com NS
+<span class="cmd">dig</span> target.com ANY
+
+<span class="cm"># Reverse lookup</span>
+<span class="cmd">dig</span> -x 192.168.1.100
+
+<span class="cm"># Zone transfer attempt</span>
+<span class="cmd">dig</span> axfr target.com @ns1.target.com
+
+<span class="cm"># nslookup interactive</span>
+<span class="cmd">nslookup</span>
+&gt; server ns1.target.com
+&gt; set type=any
+&gt; target.com</pre>
+      </div>
+    </div>
+
+    <!-- PORT SCAN -->
+    <div class="cs-section" id="portscan">
+      <h2 class="cs-section-title"><span class="sec-icon">🗺️</span> Port Scanning</h2>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Nmap Recon Workflow</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># Step 1 — Quick top ports scan</span>
+<span class="cmd">nmap</span> -sC -sV --top-ports 1000 -oN quick.txt target.com
+
+<span class="cm"># Step 2 — Full port scan (all 65535)</span>
+<span class="cmd">nmap</span> -p- --min-rate 5000 -oN allports.txt target.com
+
+<span class="cm"># Step 3 — Targeted scan on discovered ports</span>
+<span class="cmd">nmap</span> -sC -sV -p 22,80,443,8080 -oN targeted.txt target.com
+
+<span class="cm"># UDP top 100</span>
+<span class="cmd">nmap</span> -sU --top-ports 100 -oN udp.txt target.com</pre>
+      </div>
+    </div>
+
+    <!-- DIR BUSTING -->
+    <div class="cs-section" id="dirbust">
+      <h2 class="cs-section-title"><span class="sec-icon">📁</span> Directory Busting</h2>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">ffuf & Dirsearch</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># ffuf — fast, versatile</span>
+<span class="cmd">ffuf</span> -u http://target.com/FUZZ -w /usr/share/seclists/Discovery/Web-Content/common.txt -mc 200,301,302,403
+
+<span class="cm"># ffuf with extensions</span>
+<span class="cmd">ffuf</span> -u http://target.com/FUZZ -w /usr/share/seclists/Discovery/Web-Content/raft-medium-words.txt -e .php,.txt,.html,.bak
+
+<span class="cm"># Dirsearch</span>
+<span class="cmd">dirsearch</span> -u http://target.com -e php,html,js,txt -t 50
+
+<span class="cm"># Gobuster</span>
+<span class="cmd">gobuster</span> dir -u http://target.com -w /usr/share/wordlists/dirb/common.txt -x php,html -t 50</pre>
+      </div>
+    </div>
+
+    <!-- SUBDOMAINS -->
+    <div class="cs-section" id="subdomains">
+      <h2 class="cs-section-title"><span class="sec-icon">🔗</span> Subdomain Enumeration</h2>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Subdomain Discovery</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># ffuf virtual host fuzzing</span>
+<span class="cmd">ffuf</span> -u http://target.com -H "Host: FUZZ.target.com" -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -mc 200
+
+<span class="cm"># DNS brute force with ffuf</span>
+<span class="cmd">ffuf</span> -u http://FUZZ.target.com -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -mc 200
+
+<span class="cm"># Check crt.sh for passive results</span>
+<span class="cmd">curl</span> -s "https://crt.sh/?q=%.target.com&output=json" | jq '.[].name_value' | sort -u</pre>
+      </div>
+    </div>
+
+    <!-- OSINT -->
+    <div class="cs-section" id="osint">
+      <h2 class="cs-section-title"><span class="sec-icon">🕵️</span> OSINT</h2>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Quick OSINT Techniques</span>
+          <span class="code-badge badge-web">Web</span>
+        </div>
+        <pre><span class="cm"># theHarvester — emails, domains, IPs from public sources</span>
+<span class="cmd">theHarvester</span> -d target.com -b google,bing,linkedin
+
+<span class="cm"># Shodan CLI — internet-exposed assets</span>
+<span class="cmd">shodan</span> search "hostname:target.com"
+<span class="cmd">shodan</span> host 192.168.1.100
+
+<span class="cm"># Search for leaked credentials</span>
+<span class="cm"># Visit: https://haveibeenpwned.com</span>
+<span class="cm"># Visit: https://dehashed.com</span>
+
+<span class="cm"># LinkedIn for employee names (useful for username lists)</span>
+<span class="cm"># GitHub for leaked code / API keys</span>
+<span class="cmd">grep</span> -r "api_key\|password\|secret" ./cloned_repo/</pre>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="../cs.js"></script>
+</body>
+</html>
