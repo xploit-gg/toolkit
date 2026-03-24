@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Renvector | Offensive Security</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo"><span class="br">&lt;</span>Renvector<span class="br">/&gt;</span></a>
+  <ul>
+    <li><a href="#about">About</a></li>
+    <li><a href="#cheatsheets">Cheatsheets</a></li>
+    <li><a href="#skills">Skills</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- HERO / ABOUT -->
+<section id="about">
+  <div id="hero">
+    <div class="hero-inner">
+      <div class="avail"><span class="dot"></span> Available for Security Consulting</div>
+
+      <h1 class="hero-h1">
+        <span class="wh">Hi, I'm </span><span class="bl">Alvin Jharens Reyes</span>
+      </h1>
+
+      <p class="hero-sub">
+        Penetration tester with hands-on experience in Web, Network, and Mobile security testing.
+        I break things intentionally — finding weaknesses before attackers do, documenting them clearly,
+        and helping teams fix what matters most.
+      </p>
+
+      <div class="certs">
+        <span class="cert c-blue">eJPT ✓</span>
+        <span class="cert c-blue">Pre-Security · TryHackMe ✓</span>
+        <span class="cert c-dim">PNPT → in progress</span>
+        <span class="cert c-dim">OSCP → targeting</span>
+      </div>
+
+      <div class="hero-btns">
+        <a href="#cheatsheets" class="btn btn-blue">📋 View Cheatsheets</a>
+        <a href="#contact" class="btn btn-out">📬 Contact Me</a>
+      </div>
+
+      <div class="terminal">
+        <div class="t-bar"><div class="dr"></div><div class="dy"></div><div class="dg"></div></div>
+        <div class="t-body">
+          <div><span class="tp">$ </span><span class="tc">whoami</span></div>
+          <span class="to">Penetration Tester | Freelance</span>
+          <div><span class="tp">$ </span><span class="tc">cat /etc/experience</span></div>
+          <span class="to">Web · Network · Mobile | VAPT | Report Writing</span>
+          <div><span class="tp">$ </span><span class="tc">ls ./specializations/</span></div>
+          <span class="to">webapp/ network/ mobile/ reporting/</span>
+          <div><span class="tp">$ </span><span class="tc">cat /etc/education</span></div>
+          <span class="to">BSIT · Lyceum of the Philippines · 2022</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CHEATSHEETS -->
+<section id="cheatsheets">
+  <div class="sw">
+    <div class="sh">
+      <span class="sn">01.</span>
+      <h2 class="st">Cheatsheets</h2>
+      <div class="sl"></div>
+    </div>
+    <div class="g3">
+      <a href="cheatsheets/web.html" class="card">
+        <div class="ci">🌐</div>
+        <div class="ctit">Web Application Testing</div>
+        <div class="cdesc">SQLi, XSS, IDOR, LFI, Auth Bypass, File Inclusion, and Path Traversal aligned with OWASP Top 10.</div>
+        <div class="tags"><span class="tag">OWASP</span><span class="tag">Burp Suite</span><span class="tag">SQLMap</span><span class="tag">ffuf</span></div>
+      </a>
+      <a href="cheatsheets/network.html" class="card">
+        <div class="ci">📡</div>
+        <div class="ctit">Network Penetration</div>
+        <div class="cdesc">Host discovery, service enumeration, exploitation, pivoting, and post-exploitation techniques.</div>
+        <div class="tags"><span class="tag">Nmap</span><span class="tag">Metasploit</span><span class="tag">Wireshark</span><span class="tag">Hydra</span></div>
+      </a>
+      <a href="cheatsheets/mobile.html" class="card">
+        <div class="ci">📲</div>
+        <div class="ctit">Mobile Security</div>
+        <div class="cdesc">Android static & dynamic analysis, SSL pinning bypass, ADB inspection, and traffic interception.</div>
+        <div class="tags"><span class="tag">Frida</span><span class="tag">ADB</span><span class="tag">apktool</span><span class="tag">Burp Suite</span></div>
+      </a>
+      <a href="cheatsheets/privesc.html" class="card">
+        <div class="ci">🔼</div>
+        <div class="ctit">Privilege Escalation</div>
+        <div class="cdesc">Linux and Windows privesc vectors, enumeration scripts, and common misconfiguration exploits.</div>
+        <div class="tags"><span class="tag">LinPEAS</span><span class="tag">WinPEAS</span><span class="tag">GTFOBins</span></div>
+      </a>
+      <a href="cheatsheets/recon.html" class="card">
+        <div class="ci">🔍</div>
+        <div class="ctit">Reconnaissance</div>
+        <div class="cdesc">Passive and active recon — subdomain enumeration, directory brute-forcing, and OSINT gathering.</div>
+        <div class="tags"><span class="tag">ffuf</span><span class="tag">Dirsearch</span><span class="tag">Nmap</span></div>
+      </a>
+      <a href="cheatsheets/reporting.html" class="card">
+        <div class="ci">📄</div>
+        <div class="ctit">Pentest Reporting</div>
+        <div class="cdesc">Structured report writing with CVSS scoring, proof-of-concept evidence, and remediation recommendations.</div>
+        <div class="tags"><span class="tag">CVSS</span><span class="tag">MITRE ATT&CK</span><span class="tag">PoC</span></div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- SKILLS -->
+<section id="skills">
+  <div class="sw">
+    <div class="sh">
+      <span class="sn">02.</span>
+      <h2 class="st">Skills</h2>
+      <div class="sl"></div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="skill-block">
+          <div class="skill-label">Operating Systems</div>
+          <div class="tags"><span class="tag">Kali Linux</span><span class="tag">Ubuntu</span><span class="tag">Windows</span></div>
+        </div>
+        <div class="skill-block">
+          <div class="skill-label">Virtualization</div>
+          <div class="tags"><span class="tag">VMware</span></div>
+        </div>
+        <div class="skill-block">
+          <div class="skill-label">Programming / Scripting</div>
+          <div class="tags"><span class="tag">Python</span><span class="tag">Bash</span><span class="tag">PowerShell</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="skill-block">
+          <div class="skill-label">Security Tools</div>
+          <div class="tags">
+            <span class="tag">Burp Suite</span><span class="tag">Nmap</span><span class="tag">Metasploit</span>
+            <span class="tag">Wireshark</span><span class="tag">SQLMap</span><span class="tag">Hydra</span>
+            <span class="tag">ffuf</span><span class="tag">Dirsearch</span><span class="tag">LinPEAS</span><span class="tag">WinPEAS</span>
+          </div>
+        </div>
+        <div class="skill-block">
+          <div class="skill-label">Mobile Tools</div>
+          <div class="tags"><span class="tag">Frida</span><span class="tag">ADB</span><span class="tag">apktool</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="skill-block">
+          <div class="skill-label">Web Exploitation</div>
+          <div class="tags">
+            <span class="tag">SQL Injection</span><span class="tag">XSS</span><span class="tag">IDOR</span>
+            <span class="tag">LFI</span><span class="tag">Auth Bypass</span><span class="tag">File Inclusion</span><span class="tag">Path Traversal</span>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="skill-block">
+          <div class="skill-label">Frameworks & Methodology</div>
+          <div class="tags">
+            <span class="tag">OWASP Top 10</span><span class="tag">MITRE ATT&CK</span>
+            <span class="tag">CVSS Scoring</span><span class="tag">Pentest Reporting</span>
+          </div>
+        </div>
+        <div class="skill-block">
+          <div class="skill-label">Platforms</div>
+          <div class="tags"><span class="tag">TryHackMe</span><span class="tag">HackTheBox</span><span class="tag">DVWA</span><span class="tag">PortSwigger</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="sw">
+    <div class="sh">
+      <span class="sn">03.</span>
+      <h2 class="st">Get In Touch</h2>
+      <div class="sl"></div>
+    </div>
+    <div class="contact-inner">
+      <p>Interested in security assessments, consulting, or just want to connect? Feel free to reach out through any of the platforms below.</p>
+      <div class="cbtns">
+        <a href="https://github.com/yourusername" class="cbtn" target="_blank"><span>🗂️</span> GitHub</a>
+        <a href="https://linkedin.com/in/yourprofile" class="cbtn" target="_blank"><span>💼</span> LinkedIn</a>
+        <a href="mailto:ajharens.reyes@gmail.com" class="cbtn"><span>📧</span> Email</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>&lt;Renvector/&gt; · built with GitHub Pages · © 2025</footer>
+
+</body>
+</html>

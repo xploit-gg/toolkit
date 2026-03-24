@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mobile Security | Renvector</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<nav>
+  <a href="../index.html" class="nav-logo"><span class="br">&lt;</span>Renvector<span class="br">/&gt;</span></a>
+  <a href="../index.html#cheatsheets" class="nav-back">← Back to Cheatsheets</a>
+</nav>
+
+<div class="cs-layout">
+  <aside class="cs-sidebar">
+    <div class="cs-sidebar-label">On This Page</div>
+    <a href="#setup">Environment Setup</a>
+    <a href="#adb">ADB Commands</a>
+    <a href="#static">Static Analysis</a>
+    <a href="#dynamic">Dynamic Analysis</a>
+    <a href="#ssl">SSL Pinning Bypass</a>
+    <a href="#root">Root Detection Bypass</a>
+    <a href="#frida">Frida Scripts</a>
+    <a href="#datastorage">Data Storage</a>
+  </aside>
+
+  <main class="cs-main">
+    <div class="cs-header">
+      <div class="cs-header-top">
+        <span class="cs-icon">📲</span>
+        <h1 class="cs-title">Mobile Security Testing</h1>
+      </div>
+      <p class="cs-subtitle">Comprehensive cheatsheet for Android application penetration testing.</p>
+    </div>
+
+    <!-- SETUP -->
+    <div class="cs-section" id="setup">
+      <h2 class="cs-section-title"><span class="sec-icon">⚙️</span> Environment Setup</h2>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Android Setup — Burp Proxy</span>
+          <span class="code-badge badge-android">Android</span>
+        </div>
+        <pre><span class="cm"># Set proxy on device/emulator via ADB</span>
+<span class="cmd">adb</span> shell settings put global http_proxy 192.168.1.100:8080
+
+<span class="cm"># Remove proxy</span>
+<span class="cmd">adb</span> shell settings put global http_proxy :0
+
+<span class="cm"># Install Burp CA cert</span>
+<span class="cmd">adb</span> push cacert.der /sdcard/
+<span class="cm"># Settings → Security → Install from storage</span>
+
+<span class="cm"># For Android 7+ (Nougat and above) — need network_security_config.xml</span>
+<span class="cm"># Or use apktool to patch the APK</span></pre>
+      </div>
+    </div>
+
+    <!-- ADB -->
+    <div class="cs-section" id="adb">
+      <h2 class="cs-section-title"><span class="sec-icon">📱</span> ADB Commands</h2>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Essential ADB</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># List connected devices</span>
+<span class="cmd">adb</span> devices
+
+<span class="cm"># Open shell on device</span>
+<span class="cmd">adb</span> shell
+
+<span class="cm"># Install APK</span>
+<span class="cmd">adb</span> install app.apk
+
+<span class="cm"># Pull file from device</span>
+<span class="cmd">adb</span> pull /data/data/com.target.app/files/config.db ./
+
+<span class="cm"># Push file to device</span>
+<span class="cmd">adb</span> push burp.cer /sdcard/
+
+<span class="cm"># View logs (filter by app)</span>
+<span class="cmd">adb</span> logcat | grep "com.target.app"
+
+<span class="cm"># List installed packages</span>
+<span class="cmd">adb</span> shell pm list packages | grep target
+
+<span class="cm"># Get APK path</span>
+<span class="cmd">adb</span> shell pm path com.target.app
+
+<span class="cm"># Extract APK from device</span>
+<span class="cmd">adb</span> pull /data/app/com.target.app-1/base.apk ./target.apk</pre>
+      </div>
+    </div>
+
+    <!-- STATIC -->
+    <div class="cs-section" id="static">
+      <h2 class="cs-section-title"><span class="sec-icon">🔬</span> Static Analysis</h2>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">APK Decompile with apktool</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># Decompile APK</span>
+<span class="cmd">apktool</span> d target.apk -o output_dir
+
+<span class="cm"># Recompile after modification</span>
+<span class="cmd">apktool</span> b output_dir -o patched.apk
+
+<span class="cm"># Sign the recompiled APK</span>
+<span class="cmd">keytool</span> -genkey -v -keystore test.keystore -alias test -keyalg RSA -keysize 2048 -validity 10000
+<span class="cmd">jarsigner</span> -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore test.keystore patched.apk test
+<span class="cmd">zipalign</span> -v 4 patched.apk final.apk</pre>
+      </div>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Searching for Secrets in Decompiled Code</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># Find hardcoded API keys / secrets</span>
+<span class="cmd">grep</span> -r "api_key\|secret\|password\|token\|AWS\|Bearer" output_dir/
+
+<span class="cm"># Find URLs / endpoints</span>
+<span class="cmd">grep</span> -r "http\|https" output_dir/smali/ | grep -v ".class"
+
+<span class="cm"># Check AndroidManifest.xml for permissions and exported components</span>
+cat output_dir/AndroidManifest.xml</pre>
+      </div>
+    </div>
+
+    <!-- DYNAMIC -->
+    <div class="cs-section" id="dynamic">
+      <h2 class="cs-section-title"><span class="sec-icon">▶️</span> Dynamic Analysis</h2>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Intercept Traffic with Burp Suite</span>
+          <span class="code-badge badge-android">Android</span>
+        </div>
+        <pre><span class="cm"># 1. Start Burp Suite → Proxy → Options → Add listener on 0.0.0.0:8080</span>
+<span class="cm"># 2. Set device proxy to machine IP:8080</span>
+<span class="cm"># 3. Visit http://burpsuite on device browser → download CA cert</span>
+<span class="cm"># 4. Install cert: Settings → Security → Install certificate</span>
+
+<span class="cm"># Test traffic interception</span>
+<span class="cm"># Open app → Burp → HTTP History should show requests</span></pre>
+      </div>
+    </div>
+
+    <!-- SSL PINNING -->
+    <div class="cs-section" id="ssl">
+      <h2 class="cs-section-title"><span class="sec-icon">📌</span> SSL Pinning Bypass</h2>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Bypass with objection</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># Install objection</span>
+<span class="cmd">pip</span> install objection
+
+<span class="cm"># Patch APK to include Frida gadget (no root needed)</span>
+<span class="cmd">objection</span> patchapk --source target.apk
+
+<span class="cm"># Run patched APK, then connect</span>
+<span class="cmd">objection</span> -g com.target.app explore
+
+<span class="cm"># Bypass SSL pinning inside objection shell</span>
+android sslpinning disable</pre>
+      </div>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Bypass with Frida (rooted device)</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># Start frida-server on device first</span>
+<span class="cm"># https://github.com/frida/frida/releases → download frida-server for android</span>
+<span class="cmd">adb</span> push frida-server /data/local/tmp/
+<span class="cmd">adb</span> shell chmod 755 /data/local/tmp/frida-server
+<span class="cmd">adb</span> shell /data/local/tmp/frida-server &amp;
+
+<span class="cm"># Run SSL bypass script</span>
+<span class="cmd">frida</span> -U -f com.target.app -l ssl_bypass.js --no-pause
+
+<span class="cm"># Universal SSL bypass script (save as ssl_bypass.js)</span>
+<span class="cm"># https://codeshare.frida.re/@pcipolloni/universal-android-ssl-pinning-bypass-with-frida/</span></pre>
+      </div>
+    </div>
+
+    <!-- ROOT DETECTION -->
+    <div class="cs-section" id="root">
+      <h2 class="cs-section-title"><span class="sec-icon">🔓</span> Root Detection Bypass</h2>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Bypass Root Detection with objection</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># Inside objection shell</span>
+android root disable
+
+<span class="cm"># Check what root detection methods are active</span>
+android root simulate
+
+<span class="cm"># Hook specific method with Frida</span>
+<span class="cmd">frida</span> -U -f com.target.app -l root_bypass.js --no-pause</pre>
+      </div>
+    </div>
+
+    <!-- FRIDA SCRIPTS -->
+    <div class="cs-section" id="frida">
+      <h2 class="cs-section-title"><span class="sec-icon">💉</span> Frida Scripts</h2>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">List & Hook Methods</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># List loaded classes</span>
+<span class="cmd">frida</span> -U -f com.target.app --no-pause -e "Java.perform(function(){Java.enumerateLoadedClasses({onMatch:function(n){console.log(n)},onComplete:function(){}})})"
+
+<span class="cm"># Hook a method — intercept & log arguments + return value</span>
+Java.perform(function() {
+  var TargetClass = Java.use('com.target.app.LoginActivity');
+  TargetClass.checkPassword.implementation = function(pass) {
+    console.log('[*] checkPassword called with: ' + pass);
+    var result = this.checkPassword(pass);
+    console.log('[*] Result: ' + result);
+    return result;
+  };
+});</pre>
+      </div>
+    </div>
+
+    <!-- DATA STORAGE -->
+    <div class="cs-section" id="datastorage">
+      <h2 class="cs-section-title"><span class="sec-icon">🗄️</span> Data Storage</h2>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Check Insecure Storage (rooted)</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># Access app data directory</span>
+<span class="cmd">adb</span> shell
+<span class="cmd">su</span>
+ls /data/data/com.target.app/
+
+<span class="cm"># Check shared_prefs (often stores tokens/passwords)</span>
+cat /data/data/com.target.app/shared_prefs/*.xml
+
+<span class="cm"># Pull and inspect SQLite databases</span>
+<span class="cmd">adb</span> pull /data/data/com.target.app/databases/ ./
+<span class="cmd">sqlite3</span> app_database.db
+.tables
+SELECT * FROM users;</pre>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="../cs.js"></script>
+</body>
+</html>
