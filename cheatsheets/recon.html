@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reconnaissance | Renvector Cheatsheets</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f; --bg2: #111118; --bg3: #1a1a24;
+    --border: #2a2a3a; --accent: #3b82f6; --accent2: #60a5fa;
+    --green: #22d3a5; --yellow: #f59e0b; --red: #ef4444; --purple: #a78bfa;
+    --text: #e2e8f0; --text2: #94a3b8; --text3: #64748b;
+    --mono: 'JetBrains Mono', monospace; --sans: 'Inter', sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; line-height: 1.6; }
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(10,10,15,0.9); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 56px; }
+  .nav-logo { font-family: var(--mono); font-size: 1rem; color: var(--text); text-decoration: none; }
+  .nav-logo span { color: var(--accent); }
+  .nav-links { display: flex; gap: 2rem; }
+  .nav-links a { color: var(--text2); text-decoration: none; font-size: .875rem; transition: color .2s; }
+  .nav-links a:hover { color: var(--text); }
+  .page-header { border-bottom: 1px solid var(--border); padding: 3rem 2rem 2.5rem; max-width: 1100px; margin: 0 auto; }
+  .breadcrumb { font-family: var(--mono); font-size: .75rem; color: var(--text3); margin-bottom: 1rem; }
+  .breadcrumb span { color: var(--accent); }
+  .page-header h1 { font-size: 2rem; font-weight: 600; margin-bottom: .75rem; display: flex; align-items: center; gap: .75rem; }
+  .page-icon { width: 40px; height: 40px; border-radius: 8px; background: rgba(59,130,246,.15); border: 1px solid rgba(59,130,246,.3); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+  .page-header p { color: var(--text2); font-size: .95rem; max-width: 640px; }
+  .tag-row { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
+  .tag { font-family: var(--mono); font-size: .7rem; background: var(--bg3); border: 1px solid var(--border); padding: .25rem .6rem; border-radius: 4px; color: var(--text2); }
+  .layout { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 220px 1fr; gap: 0; }
+  .sidebar { border-right: 1px solid var(--border); padding: 2rem 1.5rem; position: sticky; top: 56px; height: calc(100vh - 56px); overflow-y: auto; }
+  .sidebar-label { font-family: var(--mono); font-size: .65rem; color: var(--text3); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 1rem; }
+  .sidebar nav { display: flex; flex-direction: column; gap: .25rem; }
+  .sidebar nav a { font-size: .8rem; color: var(--text2); text-decoration: none; padding: .4rem .75rem; border-radius: 5px; border-left: 2px solid transparent; transition: all .15s; }
+  .sidebar nav a:hover { color: var(--text); background: var(--bg3); border-left-color: var(--border); }
+  .sidebar nav a.active { color: var(--accent2); background: rgba(59,130,246,.08); border-left-color: var(--accent); }
+  .content { padding: 2rem 2.5rem; }
+  .section { margin-bottom: 3rem; }
+  .section-title { font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; gap: .6rem; margin-bottom: 1.5rem; padding-bottom: .75rem; border-bottom: 1px solid var(--border); }
+  .section-title .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+  .section-num { font-family: var(--mono); font-size: .7rem; color: var(--accent); background: rgba(59,130,246,.1); padding: .2rem .5rem; border-radius: 4px; }
+  .cmd-group { margin-bottom: 1.75rem; }
+  .cmd-group-title { font-family: var(--mono); font-size: .75rem; color: var(--green); margin-bottom: .6rem; letter-spacing: .05em; }
+  .cmd-block { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .cmd-block-header { display: flex; align-items: center; justify-content: space-between; padding: .5rem .9rem; background: var(--bg3); border-bottom: 1px solid var(--border); }
+  .cmd-block-label { font-family: var(--mono); font-size: .7rem; color: var(--text3); }
+  .copy-btn { font-family: var(--mono); font-size: .65rem; color: var(--text3); background: none; border: 1px solid var(--border); padding: .15rem .5rem; border-radius: 3px; cursor: pointer; transition: all .15s; }
+  .copy-btn:hover { color: var(--accent2); border-color: var(--accent); }
+  .copy-btn.copied { color: var(--green); border-color: var(--green); }
+  pre { padding: .9rem 1rem; font-family: var(--mono); font-size: .78rem; color: var(--text); line-height: 1.7; overflow-x: auto; white-space: pre; }
+  .c-comment { color: var(--text3); }
+  .c-cmd { color: var(--accent2); }
+  .c-flag { color: var(--yellow); }
+  .c-val { color: var(--green); }
+  .c-warn { color: var(--red); }
+  .c-purple { color: var(--purple); }
+  .note { background: rgba(59,130,246,.06); border: 1px solid rgba(59,130,246,.2); border-left: 3px solid var(--accent); border-radius: 0 6px 6px 0; padding: .75rem 1rem; font-size: .8rem; color: var(--text2); margin-bottom: 1.25rem; }
+  .note strong { color: var(--accent2); }
+  .warn-note { background: rgba(245,158,11,.06); border: 1px solid rgba(245,158,11,.2); border-left: 3px solid var(--yellow); border-radius: 0 6px 6px 0; padding: .75rem 1rem; font-size: .8rem; color: var(--text2); margin-bottom: 1.25rem; }
+  .warn-note strong { color: var(--yellow); }
+  .ref-table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; }
+  .ref-table th { text-align: left; font-family: var(--mono); font-size: .7rem; color: var(--text3); padding: .5rem .75rem; border-bottom: 1px solid var(--border); letter-spacing: .08em; }
+  .ref-table td { padding: .55rem .75rem; font-size: .82rem; border-bottom: 1px solid rgba(42,42,58,.5); vertical-align: top; }
+  .ref-table td:first-child { font-family: var(--mono); color: var(--accent2); font-size: .75rem; }
+  .ref-table td:last-child { color: var(--text2); }
+  .ref-table tr:last-child td { border-bottom: none; }
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+<nav>
+  <a href="../index.html" class="nav-logo">&lt;<span>Renvector</span>/&gt;</a>
+  <div class="nav-links">
+    <a href="../index.html#about">About</a>
+    <a href="../index.html#cheatsheets">Cheatsheets</a>
+    <a href="../index.html#skills">Skills</a>
+    <a href="../index.html#contact">Contact</a>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="breadcrumb">cheatsheets / <span>reconnaissance</span></div>
+  <h1><div class="page-icon">🔍</div>Reconnaissance</h1>
+  <p>Passive and active recon — subdomain enumeration, directory brute-forcing, and OSINT gathering.</p>
+  <div class="tag-row">
+    <span class="tag">ffuf</span><span class="tag">Dirsearch</span><span class="tag">Nmap</span>
+    <span class="tag">theHarvester</span><span class="tag">Amass</span><span class="tag">Shodan</span>
+  </div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-label">Sections</div>
+    <nav>
+      <a href="#passive" class="active">01. Passive Recon</a>
+      <a href="#osint">02. OSINT Tools</a>
+      <a href="#dns">03. DNS Enumeration</a>
+      <a href="#subdomains">04. Subdomain Enum</a>
+      <a href="#dirscan">05. Directory Scanning</a>
+      <a href="#active">06. Active Scanning</a>
+      <a href="#googledorks">07. Google Dorks</a>
+      <a href="#wordlists">08. Wordlists Ref</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+
+    <!-- 01 PASSIVE -->
+    <section class="section" id="passive">
+      <div class="section-title"><div class="dot"></div><span class="section-num">01</span>Passive Reconnaissance</div>
+
+      <div class="note"><strong>Passive recon = no direct interaction with the target.</strong> You gather information from public sources, search engines, and third-party databases. Zero chance of detection.</div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># WHOIS & Domain Info</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-comment"># WHOIS lookup</span>
+<span class="c-cmd">whois</span> <span class="c-val">target.com</span>
+
+<span class="c-comment"># DNS lookup</span>
+<span class="c-cmd">nslookup</span> <span class="c-val">target.com</span>
+<span class="c-cmd">dig</span> <span class="c-val">target.com</span>
+<span class="c-cmd">dig</span> <span class="c-val">target.com</span> <span class="c-val">ANY</span>              <span class="c-comment"># all records</span>
+<span class="c-cmd">dig</span> <span class="c-val">target.com</span> <span class="c-val">MX</span>               <span class="c-comment"># mail records</span>
+<span class="c-cmd">dig</span> <span class="c-val">target.com</span> <span class="c-val">TXT</span>              <span class="c-comment"># text records (SPF, DKIM)</span>
+<span class="c-cmd">dig</span> <span class="c-val">target.com</span> <span class="c-val">NS</span>               <span class="c-comment"># name servers</span>
+<span class="c-cmd">host</span> <span class="c-val">target.com</span></pre>
+        </div>
+      </div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># Certificate Transparency — Free Subdomain Intel</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-comment"># crt.sh — SSL cert logs (browser or curl)</span>
+<span class="c-cmd">curl</span> <span class="c-flag">-s</span> <span class="c-val">"https://crt.sh/?q=%25.target.com&output=json"</span> | <span class="c-cmd">jq -r '.[].name_value'</span> | <span class="c-cmd">sort -u</span>
+
+<span class="c-comment"># Also check manually at:</span>
+<span class="c-val">https://crt.sh/?q=%.target.com</span>
+<span class="c-val">https://transparencyreport.google.com/https/certificates</span></pre>
+        </div>
+      </div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># Wayback Machine</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-comment"># Get all archived URLs</span>
+<span class="c-cmd">curl</span> <span class="c-val">"http://web.archive.org/cdx/search/cdx?url=*.target.com&output=text&fl=original&collapse=urlkey"</span>
+
+<span class="c-comment"># gau — fetch known URLs</span>
+<span class="c-cmd">gau</span> <span class="c-val">target.com</span>
+<span class="c-cmd">gau</span> <span class="c-val">target.com</span> | <span class="c-cmd">grep</span> <span class="c-val">".php"</span>     <span class="c-comment"># filter PHP pages</span></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 OSINT -->
+    <section class="section" id="osint">
+      <div class="section-title"><div class="dot"></div><span class="section-num">02</span>OSINT Tools</div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># theHarvester — Email & Subdomain OSINT</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-comment"># Basic run</span>
+<span class="c-cmd">theHarvester</span> <span class="c-flag">-d</span> <span class="c-val">target.com</span> <span class="c-flag">-b</span> <span class="c-val">all</span>
+
+<span class="c-comment"># Specific sources</span>
+<span class="c-cmd">theHarvester</span> <span class="c-flag">-d</span> <span class="c-val">target.com</span> <span class="c-flag">-b</span> <span class="c-val">google,bing,linkedin</span>
+
+<span class="c-comment"># Limit results</span>
+<span class="c-cmd">theHarvester</span> <span class="c-flag">-d</span> <span class="c-val">target.com</span> <span class="c-flag">-b</span> <span class="c-val">google</span> <span class="c-flag">-l</span> <span class="c-val">100</span></pre>
+        </div>
+      </div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># Shodan — Internet-Connected Device Search</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-comment"># Shodan CLI</span>
+<span class="c-cmd">shodan init</span> <span class="c-val">YOUR_API_KEY</span>
+<span class="c-cmd">shodan host</span> <span class="c-val">TARGET_IP</span>
+<span class="c-cmd">shodan search</span> <span class="c-val">"org:Target Company"</span>
+
+<span class="c-comment"># Web queries at shodan.io:</span>
+<span class="c-val">hostname:target.com</span>
+<span class="c-val">org:"Target Company"</span>
+<span class="c-val">net:192.168.0.0/24</span>
+<span class="c-val">product:apache port:8080</span>
+<span class="c-val">http.title:"Admin Panel"</span></pre>
+        </div>
+      </div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># Maltego / SpiderFoot (GUI OSINT)</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-comment"># SpiderFoot CLI</span>
+<span class="c-cmd">spiderfoot</span> <span class="c-flag">-s</span> <span class="c-val">target.com</span> <span class="c-flag">-m</span> <span class="c-val">sfp_dnsresolve,sfp_whois</span>
+<span class="c-cmd">spiderfoot</span> <span class="c-flag">-l</span> <span class="c-val">127.0.0.1:5001</span>   <span class="c-comment"># start web UI</span>
+
+<span class="c-comment"># Recon-ng</span>
+<span class="c-cmd">recon-ng</span>
+<span class="c-val">[recon-ng] > marketplace search whois</span>
+<span class="c-val">[recon-ng] > marketplace install recon/domains-hosts/hackertarget</span>
+<span class="c-val">[recon-ng] > modules load recon/domains-hosts/hackertarget</span>
+<span class="c-val">[recon-ng] > options set SOURCE target.com</span>
+<span class="c-val">[recon-ng] > run</span></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 DNS -->
+    <section class="section" id="dns">
+      <div class="section-title"><div class="dot"></div><span class="section-num">03</span>DNS Enumeration</div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># Zone Transfer (AXFR)</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-comment"># Find nameservers first</span>
+<span class="c-cmd">dig NS</span> <span class="c-val">target.com</span>
+
+<span class="c-comment"># Attempt zone transfer</span>
+<span class="c-cmd">dig axfr</span> <span class="c-val">@ns1.target.com target.com</span>
+<span class="c-cmd">host -t axfr</span> <span class="c-val">target.com ns1.target.com</span>
+
+<span class="c-comment"># dnsenum — full DNS enum + zone transfer attempt</span>
+<span class="c-cmd">dnsenum</span> <span class="c-val">target.com</span>
+<span class="c-cmd">dnsenum</span> <span class="c-flag">--dnsserver</span> <span class="c-val">ns1.target.com</span> <span class="c-val">target.com</span></pre>
+        </div>
+      </div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># DNS Brute Force</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-comment"># dnsrecon</span>
+<span class="c-cmd">dnsrecon</span> <span class="c-flag">-d</span> <span class="c-val">target.com</span> <span class="c-flag">-D</span> <span class="c-val">/usr/share/wordlists/dnsmap.txt</span> <span class="c-flag">-t brt</span>
+
+<span class="c-comment"># fierce</span>
+<span class="c-cmd">fierce</span> <span class="c-flag">--domain</span> <span class="c-val">target.com</span>
+
+<span class="c-comment"># Reverse DNS lookup</span>
+<span class="c-cmd">dnsrecon</span> <span class="c-flag">-r</span> <span class="c-val">192.168.1.0/24</span>   <span class="c-comment"># reverse lookup on range</span></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 SUBDOMAINS -->
+    <section class="section" id="subdomains">
+      <div class="section-title"><div class="dot"></div><span class="section-num">04</span>Subdomain Enumeration</div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># Amass — Comprehensive Subdomain Enum</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-comment"># Passive (no direct contact)</span>
+<span class="c-cmd">amass enum</span> <span class="c-flag">-passive</span> <span class="c-flag">-d</span> <span class="c-val">target.com</span>
+
+<span class="c-comment"># Active (DNS brute force)</span>
+<span class="c-cmd">amass enum</span> <span class="c-flag">-active</span> <span class="c-flag">-d</span> <span class="c-val">target.com</span>
+
+<span class="c-comment"># Save output</span>
+<span class="c-cmd">amass enum</span> <span class="c-flag">-d</span> <span class="c-val">target.com</span> <span class="c-flag">-o</span> <span class="c-val">subdomains.txt</span></pre>
+        </div>
+      </div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># Subfinder & Gobuster DNS</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-comment"># subfinder</span>
+<span class="c-cmd">subfinder</span> <span class="c-flag">-d</span> <span class="c-val">target.com</span>
+<span class="c-cmd">subfinder</span> <span class="c-flag">-d</span> <span class="c-val">target.com</span> <span class="c-flag">-o</span> <span class="c-val">subs.txt</span>
+
+<span class="c-comment"># gobuster DNS mode</span>
+<span class="c-cmd">gobuster dns</span> <span class="c-flag">-d</span> <span class="c-val">target.com</span> <span class="c-flag">-w</span> <span class="c-val">/usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt</span>
+
+<span class="c-comment"># ffuf DNS</span>
+<span class="c-cmd">ffuf</span> <span class="c-flag">-u</span> <span class="c-val">http://FUZZ.target.com</span> <span class="c-flag">-w</span> <span class="c-val">/usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt</span> <span class="c-flag">-fc 302</span></pre>
+        </div>
+      </div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># VHost Fuzzing (Virtual Host Discovery)</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-comment"># ffuf vhost fuzzing (when multiple sites on same IP)</span>
+<span class="c-cmd">ffuf</span> <span class="c-flag">-u</span> <span class="c-val">http://TARGET_IP</span> <span class="c-flag">-H</span> <span class="c-val">"Host: FUZZ.target.com"</span> <span class="c-flag">-w</span> <span class="c-val">subdomains.txt</span> <span class="c-flag">-fs</span> <span class="c-val">4242</span>
+<span class="c-comment"># -fs filters by response size (adjust to filter default page size)</span></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- 05 DIRSCAN -->
+    <section class="section" id="dirscan">
+      <div class="section-title"><div class="dot"></div><span class="section-num">05</span>Directory &amp; File Scanning</div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># ffuf — Fast Fuzzing</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-comment"># Basic directory scan</span>
+<span class="c-cmd">ffuf</span> <span class="c-flag">-u</span> <span class="c-val">http://target.com/FUZZ</span> <span class="c-flag">-w</span> <span class="c-val">/usr/share/seclists/Discovery/Web-Content/common.txt</span>
+
+<span class="c-comment"># With extensions</span>
+<span class="c-cmd">ffuf</span> <span class="c-flag">-u</span> <span class="c-val">http://target.com/FUZZ</span> <span class="c-flag">-w</span> <span class="c-val">wordlist.txt</span> <span class="c-flag">-e</span> <span class="c-val">.php,.html,.txt,.bak,.zip,.old</span>
+
+<span class="c-comment"># Filter by status code</span>
+<span class="c-cmd">ffuf</span> <span class="c-flag">-u</span> <span class="c-val">http://target.com/FUZZ</span> <span class="c-flag">-w</span> <span class="c-val">wordlist.txt</span> <span class="c-flag">-mc</span> <span class="c-val">200,301,302,403</span>
+
+<span class="c-comment"># Filter by response size (remove false positives)</span>
+<span class="c-cmd">ffuf</span> <span class="c-flag">-u</span> <span class="c-val">http://target.com/FUZZ</span> <span class="c-flag">-w</span> <span class="c-val">wordlist.txt</span> <span class="c-flag">-fs</span> <span class="c-val">1234</span>
+
+<span class="c-comment"># Recursive scan</span>
+<span class="c-cmd">ffuf</span> <span class="c-flag">-u</span> <span class="c-val">http://target.com/FUZZ</span> <span class="c-flag">-w</span> <span class="c-val">wordlist.txt</span> <span class="c-flag">-recursion -recursion-depth 2</span>
+
+<span class="c-comment"># POST parameter fuzzing</span>
+<span class="c-cmd">ffuf</span> <span class="c-flag">-u</span> <span class="c-val">http://target.com/login.php</span> <span class="c-flag">-X POST</span> <span class="c-flag">-d</span> <span class="c-val">"username=FUZZ&password=test"</span> <span class="c-flag">-w</span> <span class="c-val">users.txt</span></pre>
+        </div>
+      </div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># Gobuster</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-comment"># Directory scan</span>
+<span class="c-cmd">gobuster dir</span> <span class="c-flag">-u</span> <span class="c-val">http://target.com</span> <span class="c-flag">-w</span> <span class="c-val">/usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt</span> <span class="c-flag">-x php,html,txt</span>
+
+<span class="c-comment"># With auth</span>
+<span class="c-cmd">gobuster dir</span> <span class="c-flag">-u</span> <span class="c-val">http://target.com</span> <span class="c-flag">-w</span> <span class="c-val">wordlist.txt</span> <span class="c-flag">-U admin -P password</span>
+
+<span class="c-comment"># Quiet mode (results only)</span>
+<span class="c-cmd">gobuster dir</span> <span class="c-flag">-u</span> <span class="c-val">http://target.com</span> <span class="c-flag">-w</span> <span class="c-val">wordlist.txt</span> <span class="c-flag">-q</span></pre>
+        </div>
+      </div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># Dirsearch</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-cmd">dirsearch</span> <span class="c-flag">-u</span> <span class="c-val">http://target.com</span>
+<span class="c-cmd">dirsearch</span> <span class="c-flag">-u</span> <span class="c-val">http://target.com</span> <span class="c-flag">-e php,html,txt</span>
+<span class="c-cmd">dirsearch</span> <span class="c-flag">-u</span> <span class="c-val">http://target.com</span> <span class="c-flag">-w</span> <span class="c-val">/usr/share/wordlists/custom.txt</span></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- 06 ACTIVE -->
+    <section class="section" id="active">
+      <div class="section-title"><div class="dot"></div><span class="section-num">06</span>Active Scanning</div>
+
+      <div class="warn-note"><strong>Active recon = direct interaction with target.</strong> Leaves logs. Only do this during authorized engagements within defined scope.</div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># Nmap — Service & Version Detection</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-comment"># Full recon scan</span>
+<span class="c-cmd">nmap</span> <span class="c-flag">-sC -sV -A -p-</span> <span class="c-val">TARGET_IP</span> <span class="c-flag">-oN</span> <span class="c-val">nmap_full.txt</span>
+
+<span class="c-comment"># HTTP enumeration script</span>
+<span class="c-cmd">nmap</span> <span class="c-flag">--script http-enum</span> <span class="c-flag">-p</span> <span class="c-val">80</span> <span class="c-val">TARGET_IP</span>
+
+<span class="c-comment"># HTTP methods</span>
+<span class="c-cmd">nmap</span> <span class="c-flag">--script http-methods</span> <span class="c-flag">-p</span> <span class="c-val">80</span> <span class="c-val">TARGET_IP</span>
+
+<span class="c-comment"># HTTP title scan (find web apps on all ports)</span>
+<span class="c-cmd">nmap</span> <span class="c-flag">--script http-title</span> <span class="c-flag">-sV</span> <span class="c-flag">-p</span> <span class="c-val">80,443,8080,8443,8000</span> <span class="c-val">192.168.1.0/24</span></pre>
+        </div>
+      </div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># WAF Detection</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-comment"># wafw00f — detect Web Application Firewall</span>
+<span class="c-cmd">wafw00f</span> <span class="c-val">http://target.com</span>
+<span class="c-cmd">wafw00f</span> <span class="c-flag">-a</span> <span class="c-val">http://target.com</span>   <span class="c-comment"># check all WAFs</span></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- 07 GOOGLE DORKS -->
+    <section class="section" id="googledorks">
+      <div class="section-title"><div class="dot"></div><span class="section-num">07</span>Google Dorks</div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># Google Dork Operators</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">dorks</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-comment"># Find subdomains</span>
+<span class="c-val">site:*.target.com</span>
+
+<span class="c-comment"># Exposed sensitive files</span>
+<span class="c-val">site:target.com ext:pdf OR ext:doc OR ext:xls OR ext:txt</span>
+<span class="c-val">site:target.com ext:sql OR ext:bak OR ext:log</span>
+
+<span class="c-comment"># Login pages</span>
+<span class="c-val">site:target.com inurl:login OR inurl:admin OR inurl:portal</span>
+
+<span class="c-comment"># Config files</span>
+<span class="c-val">site:target.com inurl:config OR inurl:env OR inurl:settings</span>
+
+<span class="c-comment"># Exposed credentials in code (GitHub)</span>
+<span class="c-val">site:github.com "target.com" password</span>
+<span class="c-val">site:github.com "target.com" api_key</span>
+
+<span class="c-comment"># Directory listings</span>
+<span class="c-val">site:target.com intitle:"index of"</span>
+
+<span class="c-comment"># Cameras / exposed devices</span>
+<span class="c-val">inurl:"viewerframe?mode=motion"</span>
+<span class="c-val">intitle:"webcamXP 5"</span>
+
+<span class="c-comment"># Error pages (reveals tech stack)</span>
+<span class="c-val">site:target.com "ORA-" OR "SQL Server" OR "php error"</span></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- 08 WORDLISTS -->
+    <section class="section" id="wordlists">
+      <div class="section-title"><div class="dot"></div><span class="section-num">08</span>Wordlist Reference</div>
+
+      <table class="ref-table">
+        <thead><tr><th>Path</th><th>Use Case</th></tr></thead>
+        <tbody>
+          <tr><td>/usr/share/wordlists/rockyou.txt</td><td>Password brute forcing</td></tr>
+          <tr><td>/usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt</td><td>Directory scanning (balanced speed/coverage)</td></tr>
+          <tr><td>/usr/share/wordlists/dirbuster/directory-list-2.3-small.txt</td><td>Quick directory scan</td></tr>
+          <tr><td>/usr/share/seclists/Discovery/Web-Content/common.txt</td><td>Common web paths</td></tr>
+          <tr><td>/usr/share/seclists/Discovery/Web-Content/raft-large-files.txt</td><td>Large file discovery</td></tr>
+          <tr><td>/usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt</td><td>Fast subdomain enum</td></tr>
+          <tr><td>/usr/share/seclists/Discovery/DNS/subdomains-top1million-20000.txt</td><td>Thorough subdomain enum</td></tr>
+          <tr><td>/usr/share/seclists/Usernames/top-usernames-shortlist.txt</td><td>Username brute forcing</td></tr>
+          <tr><td>/usr/share/seclists/Passwords/Common-Credentials/10-million-password-list-top-1000.txt</td><td>Quick password spray</td></tr>
+        </tbody>
+      </table>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># Install SecLists (if not present)</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-cmd">sudo apt install seclists</span>
+<span class="c-comment"># or</span>
+<span class="c-cmd">git clone</span> <span class="c-val">https://github.com/danielmiessler/SecLists</span> <span class="c-val">/usr/share/seclists</span></pre>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+  function copyBlock(btn) {
+    const pre = btn.closest('.cmd-block').querySelector('pre');
+    navigator.clipboard.writeText(pre.innerText).then(() => {
+      btn.textContent = 'copied!'; btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 1800);
+    });
+  }
+  const sections = document.querySelectorAll('.section');
+  const links = document.querySelectorAll('.sidebar nav a');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const link = document.querySelector(`.sidebar nav a[href="#${e.target.id}"]`);
+        if (link) link.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

