@@ -83,9 +83,9 @@
         .container {
             display: flex;
             margin-top: 73px;
-            max-width: 1400px;
-            margin-left: auto;
-            margin-right: auto;
+            max-width: 100%px;
+            margin-left: 0;
+            margin-right: 0;
         }
 
         /* Sidebar */
@@ -144,8 +144,9 @@
         .main-content {
             flex: 1;
             margin-left: 280px;
-            padding: 2rem 3rem;
-            max-width: 900px;
+            padding: 2rem;
+            max-width: none;
+            width: calc(100% - 280px);
         }
 
         .breadcrumb {
@@ -243,7 +244,9 @@
         .code-block {
             background-color: var(--code-bg);
             border: 1px solid var(--border);
-            border-radius: 0.5rem;
+            border-radius: 0;
+             border-left: none;
+    border-right: none;
             margin-bottom: 1.5rem;
             overflow: hidden;
         }
@@ -336,7 +339,12 @@
     padding: 1rem 2rem;
 }
             .header-content {
-                padding: 0 1rem;
+               width: 100%;              /* ← Changed from max-width */
+    margin: 0;                /* ← Remove auto centering */
+    padding: 0 2rem;          /* Keep horizontal padding for breathing room */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
             }
             .nav-links {
                 display: none;
