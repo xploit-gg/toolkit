@@ -265,6 +265,135 @@ SELECT * FROM users;</pre>
       </div>
     </div>
 
+    <!-- Deep Frida Scripts -->
+    <div class="cs-section" id="frida-advanced">
+      <h2 class="cs-section-title"><span class="sec-icon">🪝</span> Advanced Frida Hooks</h2>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Runtime Hooking Scripts</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># Hook a specific Java method</span>
+frida -U -l hook.js com.target.app
+<span class="cm"># hook.js:</span>
+Java.perform(function() {
+  var Cls = Java.use("com.target.app.AuthManager");
+  Cls.isLoggedIn.implementation = function() { return true; };
+});
+
+<span class="cm"># Dump all loaded classes</span>
+frida -U -e "Java.perform(function(){ Java.enumerateLoadedClasses({onMatch:c=>console.log(c),onComplete:()=>{}})})" com.target.app
+
+<span class="cm"># Hook crypto — log plaintext</span>
+frida -U --codeshare akabe0/frida-multiple-unpinning com.target.app
+
+<span class="cm"># Trace all calls to a class</span>
+frida-trace -U -j 'com.target.app.LoginActivity!*' com.target.app
+
+<span class="cm"># Enumerate exports of a native lib</span>
+frida-ps -U  <span class="cm"># get PID</span>
+frida -U -p &lt;PID&gt; -e "Module.enumerateExports('libnative.so').forEach(e=>console.log(e.name))"</pre>
+      </div>
+    </div>
+
+    <!-- iOS Testing -->
+    <div class="cs-section" id="ios">
+      <h2 class="cs-section-title"><span class="sec-icon">🍎</span> iOS Testing</h2>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Objection iOS Commands</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># Attach to running app (jailbroken)</span>
+objection --gadget "com.target.app" explore
+
+<span class="cm"># Disable SSL pinning</span>
+ios sslpinning disable
+
+<span class="cm"># Dump keychain</span>
+ios keychain dump
+
+<span class="cm"># List files in app sandbox</span>
+env                           <span class="cm"># show app dirs</span>
+ls /var/mobile/Containers/Data/Application/&lt;UUID&gt;/Documents/
+
+<span class="cm"># Dump plist files</span>
+ios plist cat Info.plist
+
+<span class="cm"># Jailbreak detection bypass</span>
+ios jailbreak disable</pre>
+      </div>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">iOS Binary Analysis</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># Extract IPA from device (jailbroken)</span>
+frida-ios-dump -u root -p alpine -H &lt;device_IP&gt; com.target.app
+
+<span class="cm"># Decrypt and analyze with MobSF</span>
+<span class="cm"># Upload IPA at http://localhost:8000</span>
+
+<span class="cm"># Strings in binary</span>
+strings TargetApp.app/TargetApp | grep -i "key\|secret\|token\|password"
+
+<span class="cm"># Check security features</span>
+otool -l TargetApp | grep -A4 "LC_ENCRYPTION"
+otool -hv TargetApp | grep PIE</pre>
+      </div>
+    </div>
+
+    <!-- APK Deep Analysis -->
+    <div class="cs-section" id="apk-deep">
+      <h2 class="cs-section-title"><span class="sec-icon">🔬</span> APK Deep Dive</h2>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Decompile, Patch, Recompile</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># Decompile APK</span>
+apktool d app.apk -o app_decompiled/
+
+<span class="cm"># Search for secrets in smali/config</span>
+grep -r "api_key\|secret\|password\|token" app_decompiled/ --include="*.smali" --include="*.xml"
+
+<span class="cm"># Recompile after patching</span>
+apktool b app_decompiled/ -o app_patched.apk
+
+<span class="cm"># Sign patched APK</span>
+keytool -genkey -v -keystore test.keystore -alias alias -keyalg RSA -keysize 2048 -validity 10000
+jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore test.keystore app_patched.apk alias
+
+<span class="cm"># Install on device</span>
+adb install app_patched.apk
+
+<span class="cm"># JADX GUI (Java decompile)</span>
+jadx-gui app.apk
+
+<span class="cm"># MobSF automated scan</span>
+docker run -it -p 8000:8000 opensecurity/mobile-security-framework-mobsf</pre>
+      </div>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Network Traffic Interception</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># Set Burp proxy on device (Wi-Fi settings → manual proxy)</span>
+<span class="cm"># Attacker IP, port 8080</span>
+
+<span class="cm"># Install Burp cert on Android &lt;14</span>
+openssl x509 -inform DER -in cacert.der -out cacert.pem
+openssl x509 -inform PEM -subject_hash_old -in cacert.pem | head -1
+<span class="cm"># rename to &lt;hash&gt;.0, push to /system/etc/security/cacerts/</span>
+adb root && adb remount
+adb push &lt;hash&gt;.0 /system/etc/security/cacerts/
+
+<span class="cm"># Android 14+ — use Magisk TrustUserCerts module or:</span>
+objection --gadget com.target.app explore
+android sslpinning disable</pre>
+      </div>
+    </div>
+
   </main>
 </div>
 
