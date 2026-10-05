@@ -181,6 +181,114 @@ site:target.com intitle:"index of"</pre>
       </div>
     </div>
 
+    <!-- Shodan -->
+    <div class="cs-section" id="shodan">
+      <h2 class="cs-section-title"><span class="sec-icon">🔭</span> Shodan &amp; Censys</h2>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Shodan Search Operators</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># Find all assets for an org</span>
+org:"Target Corporation"
+
+<span class="cm"># SSL certificate subdomain discovery</span>
+ssl.cert.subject.cn:target.com
+
+<span class="cm"># Exposed services</span>
+port:27017 org:"Target"         <span class="cm"># MongoDB</span>
+port:9200 org:"Target"          <span class="cm"># Elasticsearch</span>
+port:6379 org:"Target"          <span class="cm"># Redis</span>
+
+<span class="cm"># Shodan CLI</span>
+shodan search 'org:"Target" port:443'
+shodan host &lt;IP&gt;
+shodan domain target.com
+
+<span class="cm"># Censys</span>
+censys search 'target.com' --index-type hosts
+censys view &lt;IP&gt;</pre>
+      </div>
+    </div>
+
+    <!-- Google Dorks -->
+    <div class="cs-section" id="dorks">
+      <h2 class="cs-section-title"><span class="sec-icon">🔍</span> Google Dorks</h2>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">High-Value Dorks</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># Config files &amp; credentials</span>
+site:target.com filetype:env
+site:target.com filetype:sql
+site:target.com filetype:log intext:password
+site:target.com inurl:".git" intitle:"index of"
+
+<span class="cm"># Admin panels</span>
+site:target.com inurl:admin
+site:target.com inurl:login intitle:admin
+
+<span class="cm"># Open directories</span>
+intitle:"index of" site:target.com
+site:target.com intitle:"index of" "parent directory"
+
+<span class="cm"># AWS / Cloud</span>
+site:s3.amazonaws.com "target"
+site:blob.core.windows.net "target"
+site:storage.googleapis.com "target"
+
+<span class="cm"># API keys / tokens in GitHub</span>
+site:github.com "target.com" "api_key"
+site:github.com "target.com" "password"</pre>
+      </div>
+    </div>
+
+    <!-- Secrets Scanning -->
+    <div class="cs-section" id="secrets">
+      <h2 class="cs-section-title"><span class="sec-icon">🗝️</span> Secrets &amp; Credential Discovery</h2>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Git Repo Scanning</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># TruffleHog — scan GitHub org</span>
+trufflehog github --org targetcorp --only-verified
+
+<span class="cm"># TruffleHog — scan repo</span>
+trufflehog git https://github.com/target/repo --only-verified
+
+<span class="cm"># Gitleaks — scan local repo</span>
+gitleaks detect --source ./repo -v
+
+<span class="cm"># Manual git history search</span>
+git log --all -p | grep -i "password\|api_key\|secret\|token"
+git log --all --full-history -- "*.env"</pre>
+      </div>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Email &amp; Username OSINT</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># Email harvesting</span>
+theHarvester -d target.com -b google,linkedin,bing -l 500
+
+<span class="cm"># Username across platforms</span>
+sherlock username --output results.txt
+
+<span class="cm"># SMTP user validation</span>
+smtp-user-enum -M RCPT -U users.txt -D target.com -t &lt;IP&gt;
+
+<span class="cm"># crt.sh subdomain discovery</span>
+curl -s "https://crt.sh/?q=%25.target.com&output=json" | python3 -c \
+  "import sys,json; [print(e['name_value']) for e in json.load(sys.stdin)]" | sort -u
+
+<span class="cm"># Wayback Machine URLs</span>
+echo "target.com" | waybackurls | tee wayback_urls.txt
+cat wayback_urls.txt | grep -E "\.(env|sql|bak|config|xml|json)$"</pre>
+      </div>
+    </div>
+
   </main>
 </div>
 
